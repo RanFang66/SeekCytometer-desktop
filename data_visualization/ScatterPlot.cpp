@@ -72,6 +72,11 @@ void ScatterPlot::paintPlot(QPainter *painter)
             (yLog && point.y() <= 0))
             continue;
 
+
+        QPointF pDraw = mapPointToPlotArea(point);
+        if (!m_plotArea.contains(pDraw)) {
+            continue;
+        }
         painter->drawPoint(mapPointToPlotArea(point));
     }
 

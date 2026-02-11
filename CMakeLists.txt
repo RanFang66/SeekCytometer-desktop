@@ -178,7 +178,7 @@ target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 
 # FOR DEBUG
-target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=1)
+target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=0)
 
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

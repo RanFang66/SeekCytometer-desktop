@@ -17,7 +17,7 @@ public:
     enum ScaleType { Linear, Logarithmic };
 
 
-    explicit CustomAxis(QObject *parent = nullptr, double minVal = -10000.0, double maxVal = 1000000.0);
+    explicit CustomAxis(QObject *parent = nullptr, double minVal = 0, double maxVal = 10000000.0);
 
     void setRange(double min, double max); // { m_minValue = min; m_maxValue = max;};
     void setTicks(int numTicks) { m_numTicks = numTicks; };

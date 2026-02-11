@@ -15,8 +15,22 @@ HistogramPlot::HistogramPlot(const Plot &plot, QGraphicsItem *parent)
 
     m_xAxis->setAxisName(plot.axisXName());
     m_yAxis->setAxisName("Count");
+
+    m_bins = HistoBins(m_plotArea.width());
 }
 
+
+
+static double mapValueToRatio(double val, double minVal, double maxVal, CustomAxis::ScaleType type = CustomAxis::ScaleType::Linear)
+{
+    if (type == CustomAxis::Linear) {
+        return (val - minVal) / (maxVal - minVal);
+    } else {
+        double logMin = std::log10(minVal);
+        double logMax = std::log10(maxVal);
+        return (std::log10(val) - logMin) / (logMax - logMin);
+    }
+}
 
 void HistogramPlot::updateData(const QVector<int> &data)
 {
@@ -24,98 +38,50 @@ void HistogramPlot::updateData(const QVector<int> &data)
     m_data.writeMultiple(data);
 
     m_data.getMinMax(m_xMinVal, m_xMaxVal);
-
-    qreal curMin = m_xAxis->minValue();
-    qreal curMax = m_xAxis->maxValue();
-    bool needUpdate = false;
-    if (m_xMinVal < curMin) {
-        curMin = m_xMinVal;
-        needUpdate = true;
-    }
-    if (m_xMaxVal > curMax) {
-        curMax = m_xMaxVal;
-        needUpdate = true;
-    }
-
-    if (needUpdate) {
-        m_xAxis->setRange(curMin, curMax);
-    }
-
+    const bool isLog = m_xAxis->isLog();
+    m_bins.updateBins(m_xMinVal, m_xMaxVal, m_data.readAll(), isLog);
+    m_xAxis->setRange(m_bins.binStart(), m_bins.binEnd());
+    m_yAxis->setRange(0.0, m_bins.maxBinVal() * 1.1);
     update();
 }
+
+
+
 
 
 void HistogramPlot::paintPlot(QPainter *painter)
 {
     if (!painter) return;
 
-    const int binNum = qMax(1, static_cast<int>(m_plotArea.width()));
-    if (m_bins.size() != binNum)
-        m_bins.resize(binNum);
-
-    m_bins.fill(0);
-    m_maxValue = 0;
-
-    const bool xLog = (m_xAxis->scaleType() == CustomAxis::Logarithmic);
-
-    // ---------- 统计 ----------
-    for (const int val : m_data.readAll()) {
-
-        if (val <= 0 && xLog)
-            continue;
-
-        double ratio;
-        if (xLog) {
-            ratio = m_xAxis->mapValueToRatio(val);
-        } else {
-            ratio = (val - m_xAxis->minValue()) / m_xAxis->range();
-        }
-
-        int binIndex = static_cast<int>(ratio * binNum);
-        binIndex = qBound(0, binIndex, binNum - 1);
-
-        int &cnt = m_bins[binIndex];
-        cnt++;
-        m_maxValue = qMax(m_maxValue, cnt);
-    }
-
-    // ---------- 自动调整 Y 轴 ----------
-    if (m_maxValue > m_yAxis->maxValue() * 0.9) {
-        m_yAxis->setRange(
-            m_yAxis->isLog() ? 1.0 : 0.0,
-            m_maxValue * 1.1
-            );
-    } else if (m_maxValue * 1.3 < m_yAxis->maxValue()) {
-        m_yAxis->setRange(m_yAxis->isLog() ? 1.0 : 0.0,
-                          m_maxValue * 1.1);
-    }
-
     painter->save();
     painter->setPen(Qt::blue);
 
-    const bool yLog = (m_yAxis->scaleType() == CustomAxis::Logarithmic);
 
-    // ---------- 绘制 ----------
-    for (int i = 0; i < m_bins.size(); ++i) {
-        int value = m_bins.at(i);
-        if (value <= 0)
+    for (int i = 0; i < m_plotArea.width(); i++) {
+        int xVal = mapXAxisToValue(i + m_plotArea.left());
+
+        int binVal = m_bins.getBinValue(xVal);
+        if (binVal == 0) {
             continue;
-
-        double yRatio;
-        if (yLog) {
-            yRatio = m_yAxis->mapValueToRatio(value);
-        } else {
-            yRatio = static_cast<double>(value) / m_yAxis->maxValue();
         }
 
-        qreal x = m_plotArea.left() + i;
-        qreal yTop = m_plotArea.bottom() - yRatio * m_plotArea.height();
+        qreal yTop = m_plotArea.bottom() - ((binVal - m_yAxis->minValue()) / m_yAxis->range()) * m_plotArea.height();
 
+        if (yTop >= m_plotArea.bottom()) {
+            continue;
+        } else if (yTop < m_plotArea.top()) {
+            yTop = m_plotArea.top();
+        }
+
+
+        qreal x = m_plotArea.left() + i;
         painter->drawLine(
             QPointF(x, m_plotArea.bottom()),
             QPointF(x, yTop)
             );
+
     }
+
 
     // ---------- 框选 ----------
     if (m_dragMode == DragRubberBand) {
@@ -142,6 +108,7 @@ void HistogramPlot::autoAdjustAxisRange()
 {
     m_data.getMinMax(m_xMinVal, m_xMaxVal);
     m_xAxis->setRange(m_xMinVal, m_xMaxVal);
+    m_yAxis->setRange(0, m_bins.maxBinVal() * 1.1);
     update();
 }
 
