@@ -61,6 +61,9 @@ public:
         return m_xAxis->scaleType();
     }
 
+    CustomAxis* xAxis() const { return m_xAxis; }
+    CustomAxis* yAxis() const { return m_yAxis; }
+
     void setAxisUnlocked(bool unlocked);
 
     bool isAxisUnlocked() const;

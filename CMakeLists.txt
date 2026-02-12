@@ -41,7 +41,7 @@ set(PROJECT_SOURCES
         ${TS_FILES}
 )
 
-include_directories(. network datamodel database widgets dialogs delegate data_visualization data_manage test)
+include_directories(. network datamodel database widgets dialogs delegate data_visualization data_manage test camera)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt6 REQUIRED COMPONENTS Core)
@@ -142,7 +142,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         data_visualization/SaveImageButtonItem.h data_visualization/SaveImageButtonItem.cpp
         data_visualization/AxisAutoAdjustButton.h data_visualization/AxisAutoAdjustButton.cpp
         data_visualization/AxiTypeSwitchButton.h data_visualization/AxiTypeSwitchButton.cpp
+        data_visualization/AxisManualAdjustButton.h data_visualization/AxisManualAdjustButton.cpp
 
+        camera/CameraController.h camera/CameraController.cpp
+        camera/CameraWidget.h camera/CameraWidget.cpp
 
     )
 # Define target properties for Android with Qt 6 as:
@@ -177,8 +180,11 @@ target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 
+# 链接京航相机SDK
+target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/ubuntu_x64/libJHCap.so)
+
 # FOR DEBUG
-target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=0)
+target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=1)
 
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

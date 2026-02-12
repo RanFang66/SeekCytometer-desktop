@@ -17,6 +17,7 @@
 #include "SaveImageButtonItem.h"
 #include "AxisAutoAdjustButton.h"
 #include "AxiTypeSwitchButton.h"
+#include "AxisManualAdjustButton.h"
 
 PlotBase::PlotBase(const Plot &plot, QGraphicsItem *parent)
     : QGraphicsObject{parent}, m_plot{plot}, m_axisUnlocked(false)
@@ -45,6 +46,9 @@ PlotBase::PlotBase(const Plot &plot, QGraphicsItem *parent)
 
     AxisAutoAdjustButton *autoButton = new AxisAutoAdjustButton(this);
     autoButton->setPos(m_boundingRect.right() - 50, m_boundingRect.top() + 5);
+
+    AxisManualAdjustButton *manualButton = new AxisManualAdjustButton(this);
+    manualButton->setPos(m_boundingRect.right() - 125, m_boundingRect.top() + 5);
 
     AxiTypeSwitchButton *axisTypeButton = new AxiTypeSwitchButton(this);
     axisTypeButton->setPos(m_boundingRect.right() - 100, m_boundingRect.top() + 5);

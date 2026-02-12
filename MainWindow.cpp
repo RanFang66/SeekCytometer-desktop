@@ -13,6 +13,7 @@
 #include "SampleChipWidget.h"
 #include "OpticsControlWidget.h"
 #include "MicroFluidicWidget.h"
+#include "CameraWidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -113,6 +114,9 @@ void MainWindow::initDockWidgets()
 
     tabifyDockWidget(acquisitionWidget, SortingWidget::instance());
 
+    // 添加相机控制widget
+    CameraWidget *cameraWidget = new CameraWidget("Camera Control", this);
+    tabifyDockWidget(SortingWidget::instance(), cameraWidget);
 
     // SampleChipWidget *sampleChipWidget = new SampleChipWidget("Chip Control", this);
     // tabifyDockWidget(SortingWidget::instance(), sampleChipWidget);

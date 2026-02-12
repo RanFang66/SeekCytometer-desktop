@@ -1,7 +1,7 @@
 #include "DataManager.h"
 #include "HistogramPlot.h"
 #include "ScatterPlot.h"
-#include "QFile.h"
+#include <QFile>
 #include <QDateTime>
 #include <QDir>
 
