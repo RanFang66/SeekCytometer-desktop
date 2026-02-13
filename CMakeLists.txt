@@ -181,7 +181,9 @@ target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 
 # 链接京航相机SDK
-target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/ubuntu_x64/libJHCap.so)
+# target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/ubuntu_x64/libJHCap.so)
+target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/win_x64/JHCap2.dll)
+
 
 # FOR DEBUG
 target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=1)

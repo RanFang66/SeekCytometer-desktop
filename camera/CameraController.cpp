@@ -88,10 +88,10 @@ bool CameraController::initializeCamera()
     }
 
     // 设置图像格式为BMP（BGR格式）
-    // ret = CameraSetOption(m_deviceId, CAMERA_IMAGE_BMP);
-    // if (ret != API_OK) {
-    //     qWarning() << "Failed to set image format, using default";
-    // }
+    ret = CameraSetOption(m_deviceId, CAMERA_IMAGE_BMP);
+    if (ret != API_OK) {
+        qWarning() << "Failed to set image format, using default";
+    }
 
     // 分配图像缓冲区
     ret = CameraGetImageBufferSize(m_deviceId, &m_bufferSize, CAMERA_IMAGE_BMP);
