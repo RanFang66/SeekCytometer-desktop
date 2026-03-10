@@ -9,6 +9,7 @@
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QThread>
+#include <QCheckBox>
 
 class CameraController;
 
@@ -29,11 +30,22 @@ private slots:
     void onSaveImageClicked();
     void onGainChanged(int value);
     void onExposureChanged(int value);
+
+    void onAutoExposureChanged(bool checked);
+    void onAutoGainChanged(bool checked);
+    void onAETargetChanged(int value);
+
+
+    void onAWBChanged(bool checked);
     void onRedGainChanged(int value);
     void onGreenGainChanged(int value);
     void onBlueGainChanged(int value);
+
+
     void onGammaChanged(double value);
     void onContrastChanged(double value);
+    void onSaturationChanged(double value);
+    void onBlackLevelChanged(int value);
 
     void onCameraInitialized(int width, int height);
     void onCameraInitFailed(QString error);
@@ -47,7 +59,9 @@ private:
     QPushButton *btnStartStop;
     QPushButton *btnSaveImage;
 
-    // 色彩平衡控制
+    // White Balance
+    QCheckBox *cBoxAWB;
+    QPushButton *btnOnePushWB;
     QSlider *sliderRedGain;
     QDoubleSpinBox *spinRedGain;
     QSlider *sliderGreenGain;
@@ -55,21 +69,31 @@ private:
     QSlider *sliderBlueGain;
     QDoubleSpinBox *spinBlueGain;
 
-    // 曝光和增益
+    // Exposure
+    QCheckBox *cBoxAutoGain;
+    QCheckBox *cBoxAutoExposure;
     QSlider *sliderExposure;
     QSpinBox *spinExposure;
     QSlider *sliderGain;
     QSpinBox *spinGain;
+    QSlider *sliderAETarget;
+    QSpinBox *spinAETarget;
 
-    // Gamma和对比度
+    // Image Enhancement
     QSlider *sliderGamma;
     QDoubleSpinBox *spinGamma;
     QSlider *sliderContrast;
     QDoubleSpinBox *spinContrast;
+    QSlider *sliderSaturation;
+    QDoubleSpinBox *spinSaturation;
+    QSlider *sliderBlackLevel;
+    QSpinBox *spinBlackLevel;
+
 
     // 状态显示
     QLabel *lblCameraStatus;
     QLabel *lblResolution;
+    QLabel *lblCameraName;
 
     // 线程模型
     QThread *m_cameraThread;

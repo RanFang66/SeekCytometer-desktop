@@ -55,7 +55,7 @@ public slots:
     bool sendSortingStop();
     bool sendDetectorSettings(const QModelIndex &topLeft, const QModelIndex &bottomRight,
                               const QList<int> &roles = QList<int>());
-    bool sendDriveParameters(int type, int delay, int width, int coolingTime);
+    bool sendDriveParameters(int type, int delay, int width, int coolingTime, int coe);
     bool sendGateData(const Gate &gate);
 
     bool sendSpeedMeasureSetting(int preId, int postId, int preThresh, int dist, int maxTimeSpan);

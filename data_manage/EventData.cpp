@@ -6,6 +6,7 @@ EventData::EventData() {
     enableSorted = false;
     isSorted = false;
     isValidMeasure = false;
+    chPulseValid = 0;
 }
 
 
@@ -19,6 +20,7 @@ EventData::EventData(const QVector<int> &channels)
     diffTimeUs = 0;
     postTimeUs = 0;
     enabledChannels = channels;
+    chPulseValid = 0;
     data.resize(channels.size(), QVector<int>(3, 0));
 
     channelIndexMap.clear();
@@ -45,10 +47,11 @@ EventData::EventData(const QVector<int> &channels, const QByteArray &bytes)
     stream >> header;
     stream >> diffTimeUs;
     stream >> postTimeUs;
-    eventId = header & 0x00FFFFFF;
-    enableSorted = ((header & 0x01000000) != 0);
-    isSorted = ((header & 0x02000000) != 0);
-    isValidMeasure = ((header & 0x04000000) != 0);
+    eventId = header & 0x000FFFFF;
+    enableSorted = ((header & 0x00100000) != 0);
+    isSorted = ((header & 0x00200000) != 0);
+    isValidMeasure = ((header & 0x00400000) != 0);
+    chPulseValid = ((header & 0xFF000000) >> 24);
     for (int i = 0; i < channels.size(); i++) {
         for (int j = 0; j < 3; j++) {
             stream >> data[i][j];
@@ -80,10 +83,11 @@ EventData::EventData(const QVector<int> &channels, QDataStream &stream)
 
     stream >> headMagicWord;
     stream >> header;
-    eventId = header & 0x00FFFFFF;
-    enableSorted = ((header & 0x01000000) != 0);
-    isSorted = ((header & 0x02000000) != 0);
-    isValidMeasure = ((header & 0x04000000) != 0);
+    eventId = header & 0x000FFFFF;
+    enableSorted = ((header & 0x00100000) != 0);
+    isSorted = ((header & 0x00200000) != 0);
+    isValidMeasure = ((header & 0x00400000) != 0);
+    chPulseValid = ((header & 0xFF000000) >> 24);
 
     for (int i = 0; i < channels.size(); i++) {
         for (int j = 0; j < 3; j++) {

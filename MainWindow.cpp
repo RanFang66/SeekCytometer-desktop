@@ -127,7 +127,7 @@ void MainWindow::initDockWidgets()
     // MicroFluidicWidget *microFluidicWidget = new MicroFluidicWidget("MicroFluidic Control", this);
     // tabifyDockWidget(opticsControlWidget, microFluidicWidget);
 
-    // acquisitionWidget->raise();
+    SortingWidget::instance()->raise();
 
     connect(experimentsBrowser, &ExperimentsBrowser::worksheetSelected, WorkSheetWidget::instance(), &WorkSheetWidget::addWorkSheetView);
     connect(experimentsBrowser, &ExperimentsBrowser::settingsSelected, cytometerSettingsWidget, &CytometerSettingsWidget::onCytometerSettingsChanged);

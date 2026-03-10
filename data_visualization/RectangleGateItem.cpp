@@ -56,6 +56,11 @@ void RectangleGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
+    QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
+    QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
+
+    m_rectangle = QRectF(p1, p2);
+
     painter->save();
 
     if (m_drawingFinished) {

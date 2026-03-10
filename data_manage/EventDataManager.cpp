@@ -72,6 +72,7 @@ void EventDataManager::saveEventToCsvFile(const QVector<EventData> &updateData)
         dataStream << data.getDiffTimeUs() << ",";
         dataStream << (data.isEnabledSort() ? "true" : "false") << ",";
         dataStream << (data.isRealSorted() ? "true" : "false") << ",";
+        dataStream << QString::number(data.validChPulse())<<",";
         for (int ch : data.getEnabledChannels()) {
             for (MeasurementType type : MeasurementTypeHelper::measurementTypeList()) {
                 dataStream << data.getData(ch, type) << ",";
@@ -121,6 +122,8 @@ void EventDataManager::initEventDataManager(const QVector<DetectorSettings> &set
         textStream << "Sort Triggered";
         textStream << ",";
         textStream << "Sorted";
+        textStream << ",";
+        textStream << "Pulse Ch";
         textStream << ",";
         for (int ch : m_enabledChannels) {
             for (MeasurementType type : MeasurementTypeHelper::measurementTypeList()) {

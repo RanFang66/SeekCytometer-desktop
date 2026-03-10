@@ -18,7 +18,7 @@ int GatesDAO::insertGate(const Gate &gate)
     query.bindValue(":gate_type", Gate::gateTypeToString(gate.gateType()));
     query.bindValue(":parent_population_id", gate.parentId() == 0 ? QVariant() : gate.parentId());
     query.bindValue(":x_axis_id", gate.xAxisSettingId());
-    query.bindValue(":y_axis_id", gate.yAxisSettingId() == 0 ? QVariant() : gate.yAxisSettingId());
+    query.bindValue(":y_axis_id", gate.yAxisSettingId() <= 0 ? QVariant() : gate.yAxisSettingId());
     query.bindValue(":x_mearsure_type", MeasurementTypeHelper::measurementTypeToString(gate.xMeasurementType()));
     query.bindValue(":y_mearsure_type", gate.yMeasurementType() == MeasurementType::Unknown ? QVariant() : MeasurementTypeHelper::measurementTypeToString(gate.yMeasurementType()));
     query.bindValue(":gate_data", gate.pointsJsonString());
@@ -40,7 +40,7 @@ bool GatesDAO::updateGate(const Gate &gate)
     query.bindValue(":gate_type", Gate::gateTypeToString(gate.gateType()));
     query.bindValue(":parent_population_id", gate.parentId() == 0 ? QVariant() : gate.parentId());
     query.bindValue(":x_axis_id", gate.xAxisSettingId());
-    query.bindValue(":y_axis_id", gate.yAxisSettingId() == 0 ? QVariant() : gate.yAxisSettingId());
+    query.bindValue(":y_axis_id", gate.yAxisSettingId() <= 0 ? QVariant() : gate.yAxisSettingId());
     query.bindValue(":x_mearsure_type", MeasurementTypeHelper::measurementTypeToString(gate.xMeasurementType()));
     query.bindValue(":y_mearsure_type", gate.yMeasurementType() == MeasurementType::Unknown ? QVariant() : MeasurementTypeHelper::measurementTypeToString(gate.yMeasurementType()));
     query.bindValue(":gate_data", gate.pointsJsonString());

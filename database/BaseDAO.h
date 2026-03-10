@@ -16,9 +16,10 @@ public:
 
 protected:
     QSqlDatabase m_db;
+    QString lastError;
 
 signals:
-    void databaseError(const QSqlError &error);
+    void databaseError(const QSqlError &error) const;
 };
 
 #endif // BASEDAO_H

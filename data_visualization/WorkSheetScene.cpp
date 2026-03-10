@@ -26,8 +26,11 @@ void WorkSheetScene::finishDrawingGate(bool ok)
     if (!ok && m_gateItem) {
         removeItem(m_gateItem);
         delete m_gateItem;
+
+        QMessageBox::warning(WorkSheetWidget::instance(), tr("Insert Gate Failed!"), tr("Insert Gate Failed"));
     } else {
         m_gateItems.append(m_gateItem);
+        QMessageBox::information(WorkSheetWidget::instance(), tr("Insert Gate Ok!"), tr("Insert Gate Ok"));
     }
     m_gateItem = nullptr;
     m_activePlot = nullptr;

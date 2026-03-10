@@ -2,7 +2,7 @@
 #include <QGridLayout>
 #include "DetectorSettingsModel.h"
 #include "DetectorsDAO.h"
-
+#include "SortingWidget.h"
 #include "EventDataManager.h"
 SpeedMeasureWidget::SpeedMeasureWidget(QWidget *parent)
     : QWidget{parent}
@@ -73,7 +73,7 @@ void SpeedMeasureWidget::initWidget()
         m_postChId = comboPostCh->currentData().toInt();
         m_dist = spinDist->value();
         m_maxTimeSpan = spinMaxTimeDiff->value();
-
+        SortingWidget::instance()->setMeasureDist(m_dist);
         EventDataManager::instance().setSpeedMeasureDist(m_dist);
         emit speedMeasureSettingChangged(m_preChId, m_postChId, m_preChThresh, m_dist, m_maxTimeSpan);
     });

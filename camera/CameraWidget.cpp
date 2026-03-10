@@ -74,6 +74,8 @@ void CameraWidget::initDockWidget()
     QFormLayout *statusLayout = new QFormLayout();
     lblCameraStatus = new QLabel(tr("Initializing..."));
     lblResolution = new QLabel("-");
+    lblCameraName = new QLabel("JHUMS(SN)");
+    statusLayout->addRow(tr("Name(SN):"), lblCameraName);
     statusLayout->addRow(tr("Status:"), lblCameraStatus);
     statusLayout->addRow(tr("Resolution:"), lblResolution);
     statusGroup->setLayout(statusLayout);
@@ -94,6 +96,15 @@ void CameraWidget::initDockWidget()
     // 3. 色彩平衡组
     QGroupBox *wbGroup = new QGroupBox(tr("White Balance"));
     QFormLayout *wbLayout = new QFormLayout();
+
+    // Auto White Balance
+    cBoxAWB = new QCheckBox("AWB");
+    btnOnePushWB = new QPushButton(tr("One Push WB"));
+
+    cBoxAWB->setEnabled(false);
+    btnOnePushWB->setEnabled(false);
+    wbLayout->addRow(cBoxAWB, btnOnePushWB);
+
 
     // 红色增益
     QHBoxLayout *redLayout = new QHBoxLayout();
@@ -143,25 +154,33 @@ void CameraWidget::initDockWidget()
     wbGroup->setLayout(wbLayout);
     controlLayout->addWidget(wbGroup);
 
-    // 4. 曝光和增益组
+    // 4. Exposure
     QGroupBox *exposureGroup = new QGroupBox(tr("Exposure && Gain"));
     QFormLayout *exposureLayout = new QFormLayout();
 
-    // 曝光控制
+    cBoxAutoExposure = new QCheckBox("Auto Exposure");
+    cBoxAutoGain = new QCheckBox("Auto Gain");
+
+    cBoxAutoExposure->setEnabled(false);
+    cBoxAutoGain->setEnabled(false);
+    // Exposure
     QHBoxLayout *expLayout = new QHBoxLayout();
     sliderExposure = new QSlider(Qt::Horizontal);
-    sliderExposure->setRange(1, 10000);
+    sliderExposure->setRange(1, 4000);
     sliderExposure->setValue(100);
     sliderExposure->setEnabled(false);
     spinExposure = new QSpinBox();
-    spinExposure->setRange(1, 10000);
+    spinExposure->setRange(1, 4000);
     spinExposure->setValue(100);
     spinExposure->setEnabled(false);
     expLayout->addWidget(sliderExposure, 3);
     expLayout->addWidget(spinExposure, 1);
+    exposureLayout->addRow(cBoxAutoExposure, cBoxAutoGain);
     exposureLayout->addRow(tr("Exposure:"), expLayout);
 
-    // 增益控制
+
+
+    // Gain
     QHBoxLayout *gainLayout = new QHBoxLayout();
     sliderGain = new QSlider(Qt::Horizontal);
     sliderGain->setRange(1, 255);
@@ -173,23 +192,39 @@ void CameraWidget::initDockWidget()
     spinGain->setEnabled(false);
     gainLayout->addWidget(sliderGain, 3);
     gainLayout->addWidget(spinGain, 1);
+
     exposureLayout->addRow(tr("Gain:"), gainLayout);
+
+    // AETarget
+    QHBoxLayout *aetargetLayout = new QHBoxLayout();
+    sliderAETarget = new QSlider(Qt::Horizontal);
+    sliderAETarget->setRange(1, 255);
+    sliderAETarget->setValue(100);
+    sliderAETarget->setEnabled(false);
+    spinAETarget = new QSpinBox();
+    spinAETarget->setRange(1, 255);
+    spinAETarget->setValue(100);
+    spinAETarget->setEnabled(false);
+    aetargetLayout->addWidget(sliderAETarget, 3);
+    aetargetLayout->addWidget(spinAETarget, 1);
+    exposureLayout->addRow(tr("AE Target:"), aetargetLayout);
+
 
     exposureGroup->setLayout(exposureLayout);
     controlLayout->addWidget(exposureGroup);
 
-    // 5. Gamma和对比度组
+    // 5. Image Enhancement
     QGroupBox *imageGroup = new QGroupBox(tr("Image Enhancement"));
     QFormLayout *imageLayout = new QFormLayout();
 
-    // Gamma控制
+    // Gamma
     QHBoxLayout *gammaLayout = new QHBoxLayout();
     sliderGamma = new QSlider(Qt::Horizontal);
-    sliderGamma->setRange(10, 1000);  // 0.1-10.0 * 100
+    sliderGamma->setRange(10, 300);  // 0.1-3.0 * 100
     sliderGamma->setValue(100);       // 默认1.0
     sliderGamma->setEnabled(false);
     spinGamma = new QDoubleSpinBox();
-    spinGamma->setRange(0.1, 10.0);
+    spinGamma->setRange(0.1, 3.0);
     spinGamma->setValue(1.0);
     spinGamma->setSingleStep(0.1);
     spinGamma->setEnabled(false);
@@ -197,20 +232,54 @@ void CameraWidget::initDockWidget()
     gammaLayout->addWidget(spinGamma, 1);
     imageLayout->addRow(tr("Gamma:"), gammaLayout);
 
-    // 对比度控制
+    // Contrast
     QHBoxLayout *contrastLayout = new QHBoxLayout();
     sliderContrast = new QSlider(Qt::Horizontal);
-    sliderContrast->setRange(0, 300);  // 0.0-3.0 * 100
+    sliderContrast->setRange(0, 200);  // 0.0-2.0 * 100
     sliderContrast->setValue(100);     // 默认1.0
     sliderContrast->setEnabled(false);
     spinContrast = new QDoubleSpinBox();
-    spinContrast->setRange(0.0, 3.0);
+    spinContrast->setRange(0.0, 2.0);
     spinContrast->setValue(1.0);
     spinContrast->setSingleStep(0.1);
     spinContrast->setEnabled(false);
     contrastLayout->addWidget(sliderContrast, 3);
     contrastLayout->addWidget(spinContrast, 1);
     imageLayout->addRow(tr("Contrast:"), contrastLayout);
+
+    // Saturation
+    QHBoxLayout *saturationLayout = new QHBoxLayout();
+    sliderSaturation = new QSlider(Qt::Horizontal);
+    sliderSaturation->setRange(0, 200);     //0.0-2.0*100
+    sliderSaturation->setValue(100);
+    sliderSaturation->setEnabled(false);
+    spinSaturation = new QDoubleSpinBox();
+    spinSaturation->setRange(0.0, 2.0);
+    spinSaturation->setValue(1.0);
+    spinSaturation->setSingleStep(0.1);
+    spinSaturation->setEnabled(false);
+    saturationLayout->addWidget(sliderSaturation, 3);
+    saturationLayout->addWidget(spinSaturation, 1);
+    imageLayout->addRow(tr("Saturation:"), saturationLayout);
+
+
+    // Black Level
+    QHBoxLayout *blackLevelLayout = new QHBoxLayout();
+    sliderBlackLevel = new QSlider(Qt::Horizontal);
+    sliderBlackLevel->setRange(0, 255);             // 0--255
+    sliderBlackLevel->setValue(100);
+    sliderBlackLevel->setEnabled(false);
+    spinBlackLevel = new QSpinBox();
+    spinBlackLevel->setRange(0, 255);
+    spinBlackLevel->setSingleStep(1);
+    spinBlackLevel->setValue(100);
+    spinBlackLevel->setEnabled(false);
+    blackLevelLayout->addWidget(sliderBlackLevel, 3);
+    blackLevelLayout->addWidget(spinBlackLevel, 1);
+    imageLayout->addRow(tr("Black Level:"), blackLevelLayout);
+
+
+
 
     imageGroup->setLayout(imageLayout);
     controlLayout->addWidget(imageGroup);
@@ -243,6 +312,10 @@ void CameraWidget::connectSignalsSlots()
             this, &CameraWidget::onSaveImageClicked);
 
     // 增益和曝光
+    connect(cBoxAutoExposure, &QCheckBox::checkStateChanged, this, &CameraWidget::onAutoExposureChanged);
+    connect(cBoxAutoGain, &QCheckBox::checkStateChanged, this, &CameraWidget::onAutoGainChanged);
+
+
     connect(sliderGain, &QSlider::valueChanged,
             this, &CameraWidget::onGainChanged);
     connect(spinGain, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -253,7 +326,15 @@ void CameraWidget::connectSignalsSlots()
     connect(spinExposure, QOverload<int>::of(&QSpinBox::valueChanged),
             sliderExposure, &QSlider::setValue);
 
+    connect(sliderAETarget, &QSlider::valueChanged,
+            this, &CameraWidget::onAETargetChanged);
+    connect(spinAETarget, QOverload<int>::of(&QSpinBox::valueChanged),
+            sliderAETarget, &QSlider::setValue);
+
     // 色彩平衡
+
+    connect(cBoxAWB, &QCheckBox::checkStateChanged, this, &CameraWidget::onAWBChanged);
+
     connect(sliderRedGain, &QSlider::valueChanged,
             this, &CameraWidget::onRedGainChanged);
     connect(spinRedGain, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
@@ -287,6 +368,21 @@ void CameraWidget::connectSignalsSlots()
             });
     connect(spinContrast, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             [this](double value) { sliderContrast->setValue(static_cast<int>(value * 100)); });
+
+    connect(sliderSaturation, &QSlider::valueChanged,
+            [this](int value) {
+                double sat = value / 100.0;
+                spinSaturation->setValue(sat);
+                onContrastChanged(sat);
+            });
+    connect(spinSaturation, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            [this](double value) { sliderSaturation->setValue(static_cast<int>(value * 100)); });
+
+
+    connect(sliderBlackLevel, &QSlider::valueChanged, this, &CameraWidget::onBlackLevelChanged);
+
+    connect(spinBlackLevel, QOverload<int>::of(&QSpinBox::valueChanged),
+            [this](int value) { sliderBlackLevel->setValue(value); });
 }
 
 void CameraWidget::onStartStopClicked()
@@ -346,6 +442,53 @@ void CameraWidget::onExposureChanged(int value)
     QMetaObject::invokeMethod(m_controller,
                               [this, value]() {
                                   m_controller->setExposure(value);
+                              },
+                              Qt::QueuedConnection);
+}
+
+void CameraWidget::onAutoExposureChanged(bool checked)
+{
+    spinExposure->setEnabled(!checked);
+    sliderExposure->setEnabled(!checked);
+    QMetaObject::invokeMethod(m_controller,
+                              [this, checked]() {
+                                m_controller->setAutoExposure(checked);
+                            },
+                              Qt::QueuedConnection);
+}
+
+void CameraWidget::onAutoGainChanged(bool checked)
+{
+    spinGain->setEnabled(!checked);
+    sliderGain->setEnabled(!checked);
+    QMetaObject::invokeMethod(m_controller,
+                              [this, checked]() {
+                                  m_controller->setAutoGain(checked);
+                              },
+                              Qt::QueuedConnection);
+}
+
+void CameraWidget::onAETargetChanged(int value)
+{
+    spinAETarget->setValue(value);
+    QMetaObject::invokeMethod(m_controller,
+                              [this, value]() {
+                                  m_controller->setAETarget(value);
+                              },
+                              Qt::QueuedConnection);
+}
+
+void CameraWidget::onAWBChanged(bool checked)
+{
+    spinRedGain->setEnabled(!checked);
+    spinBlueGain->setEnabled(!checked);
+    spinGreenGain->setEnabled(!checked);
+    sliderRedGain->setEnabled(!checked);
+    sliderGreenGain->setEnabled(!checked);
+    sliderBlueGain->setEnabled(!checked);
+    QMetaObject::invokeMethod(m_controller,
+                              [this, checked]() {
+                                  m_controller->setAutoWhiteBalance(checked);
                               },
                               Qt::QueuedConnection);
 }
@@ -416,18 +559,48 @@ void CameraWidget::onContrastChanged(double value)
                               Qt::QueuedConnection);
 }
 
+void CameraWidget::onSaturationChanged(double value)
+{
+    QMetaObject::invokeMethod(m_controller,
+                              [this, value]() {
+                                  m_controller->setSaturation(value);
+                              },
+                              Qt::QueuedConnection);
+}
+
+void CameraWidget::onBlackLevelChanged(int value)
+{
+    spinBlackLevel->setValue(value);
+    QMetaObject::invokeMethod(m_controller,
+                              [this, value]() {
+                                  m_controller->setBlackLevel(value);
+                              },
+                              Qt::QueuedConnection);
+}
+
 void CameraWidget::onCameraInitialized(int width, int height)
 {
     lblCameraStatus->setText(tr("Ready"));
+    lblCameraName->setText(QString("%1(%2)").arg(m_controller->modelName(), m_controller->name()));
     lblResolution->setText(QString("%1 x %2").arg(width).arg(height));
     m_imageLabel->setText(tr("Click 'Start' to begin capture"));
 
     // 启用所有控件
     btnStartStop->setEnabled(true);
+    cBoxAutoExposure->setEnabled(true);
+    cBoxAutoGain->setEnabled(true);
+
+
+
     sliderGain->setEnabled(true);
     spinGain->setEnabled(true);
     sliderExposure->setEnabled(true);
     spinExposure->setEnabled(true);
+    sliderAETarget->setEnabled(true);
+    spinAETarget->setEnabled(true);
+
+
+    cBoxAWB->setEnabled(true);
     sliderRedGain->setEnabled(true);
     spinRedGain->setEnabled(true);
     sliderGreenGain->setEnabled(true);
@@ -438,6 +611,10 @@ void CameraWidget::onCameraInitialized(int width, int height)
     spinGamma->setEnabled(true);
     sliderContrast->setEnabled(true);
     spinContrast->setEnabled(true);
+    sliderSaturation->setEnabled(true);
+    spinSaturation->setEnabled(true);
+    sliderBlackLevel->setEnabled(true);
+    spinBlackLevel->setEnabled(true);
 
     qDebug() << "Camera ready:" << width << "x" << height;
 }

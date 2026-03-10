@@ -164,16 +164,16 @@ CREATE TABLE Plots (
 );
 
 
-CREATE TYPE PopulationLogicOperator AS ENUM('NONE', 'AND', 'OR', 'NOT', 'REST');
-CREATE TABLE Populations (
-    population_id       SERIAL PRIMARY KEY NOT NULL,
-    worksheet_id        INT NOT NULL,
-    population_name     TEXT NOT NULL,
-    parent_id           INT,
-    logic_op            PopulationLogicOperator NOT NULL DEFAULT 'NONE',
-    FOREIGN KEY (worksheet_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
-    FOREIGN KEY (parent_id) REFERENCES Populations(population_id) ON DELETE CASCADE
-);
+-- CREATE TYPE PopulationLogicOperator AS ENUM('NONE', 'AND', 'OR', 'NOT', 'REST');
+-- CREATE TABLE Populations (
+--     population_id       SERIAL PRIMARY KEY NOT NULL,
+--     worksheet_id        INT NOT NULL,
+--     population_name     TEXT NOT NULL,
+--     parent_id           INT,
+--     logic_op            PopulationLogicOperator NOT NULL DEFAULT 'NONE',
+--     FOREIGN KEY (worksheet_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
+--     FOREIGN KEY (parent_id) REFERENCES Populations(population_id) ON DELETE CASCADE
+-- );
 
 
 
@@ -197,17 +197,17 @@ CREATE TABLE Gates (
 
 
 
-CREATE TABLE PopulationRelation (
-    relation_id                     SERIAL PRIMARY KEY NOT NULL,
-    population_id                   INT NOT NULL,
-    compose_population_id           INT,
-    gate_id                         INT,
-    FOREIGN KEY (population_id) REFERENCES Populations(population_id) ON DELETE CASCADE,
-    FOREIGN KEY (compose_population_id) REFERENCES Populations(population_id) ON DELETE CASCADE,
-    FOREIGN KEY (gate_id) REFERENCES Gates(gate_id) ON DELETE CASCADE,
-    UNIQUE (population_id, compose_population_id),
-    UNIQUE (relation_id, gate_id)
-);
+-- CREATE TABLE PopulationRelation (
+--     relation_id                     SERIAL PRIMARY KEY NOT NULL,
+--     population_id                   INT NOT NULL,
+--     compose_population_id           INT,
+--     gate_id                         INT,
+--     FOREIGN KEY (population_id) REFERENCES Populations(population_id) ON DELETE CASCADE,
+--     FOREIGN KEY (compose_population_id) REFERENCES Populations(population_id) ON DELETE CASCADE,
+--     FOREIGN KEY (gate_id) REFERENCES Gates(gate_id) ON DELETE CASCADE,
+--     UNIQUE (population_id, compose_population_id),
+--     UNIQUE (relation_id, gate_id)
+-- );
 
 
 
@@ -304,7 +304,7 @@ FOR EACH ROW
 EXECUTE FUNCTION after_worksheet_delete_function();
 
 
-CREATE TRIGGER AfterGatesInsert
-AFTER INSERT ON Gates
-FOR EACH ROW
-EXECUTE FUNCTION after_gate_insert_function();
+-- CREATE TRIGGER AfterGatesInsert
+-- AFTER INSERT ON Gates
+-- FOR EACH ROW
+-- EXECUTE FUNCTION after_gate_insert_function();

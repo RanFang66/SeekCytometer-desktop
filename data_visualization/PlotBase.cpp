@@ -494,6 +494,7 @@ void PlotBase::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     paintTitle(painter);
     paintAxis(painter);
     paintPlot(painter);
+
     drawCursorValue(painter);
 }
 

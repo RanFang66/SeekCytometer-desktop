@@ -19,6 +19,7 @@ public:
     int getData(int channelId, MeasurementType type) const;
     bool isEnabledSort() const;
     bool isRealSorted() const;
+    quint8 validChPulse() const;
     bool isValidSpeedMeasure() const;
 
     const QVector<int> &getEnabledChannels() const;
@@ -36,6 +37,7 @@ public:
     void setValidSpeedMeasure(bool enabled);
     void setDiffTimeUs(quint32 time);
     void setPostTimeUs(quint32 time);
+    void setValidChPulse(quint8 val);
 
     static constexpr quint32 HEAD_MAGIC = 0x55AA55AA;
     static constexpr quint32 TAIL_MAGIC = 0xAA55AA55;
@@ -49,7 +51,7 @@ private:
     bool                    isValidData;
     QVector<int>            enabledChannels;
     QVector<QVector<int>>   data;
-
+    quint8                  chPulseValid;
     QHash<int, int>         channelIndexMap;
 };
 
@@ -84,6 +86,11 @@ inline bool EventData::isEnabledSort() const
 inline bool EventData::isRealSorted() const
 {
     return isSorted;
+}
+
+inline quint8 EventData::validChPulse() const
+{
+    return chPulseValid;
 }
 
 inline bool EventData::isValidSpeedMeasure() const
@@ -141,6 +148,11 @@ inline void EventData::setDiffTimeUs(quint32 time)
 inline void EventData::setPostTimeUs(quint32 time)
 {
     postTimeUs = time;
+}
+
+inline void EventData::setValidChPulse(quint8 val)
+{
+    chPulseValid = val;
 }
 
 inline bool EventData::isValidEvent() const

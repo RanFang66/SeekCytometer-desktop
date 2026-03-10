@@ -29,6 +29,7 @@ void SortingWidget::initSortingWidget()
     // editDriveStrength = new QLineEdit("5000", this);
     editCoolingTime = new QLineEdit("200", this);
     editDriveDealy = new QLineEdit("100", this);
+    editSortDist = new QLineEdit("0", this);
     comboDriveMode = new QComboBox(this);
     comboDriveMode->addItem(tr("Level Trig"), 0);
     comboDriveMode->addItem(tr("Edge Trig"), 1);
@@ -48,15 +49,18 @@ void SortingWidget::initSortingWidget()
     driveLayout->addWidget(new QLabel(tr("Drive Mode"), this), 0, 0);
     driveLayout->addWidget(comboDriveMode, 0, 1);
 
-    driveLayout->addWidget(new QLabel(tr("Drive Width"), this), 0, 2);
+    driveLayout->addWidget(new QLabel(tr("Drive Width(us)"), this), 0, 2);
     driveLayout->addWidget(editDriveWidth, 0, 3);
     // driveLayout->addWidget(new QLabel(tr("Drive Strength"), this), 0, 2);
     // driveLayout->addWidget(editDriveStrength, 0, 3);
-    driveLayout->addWidget(new QLabel(tr("Cooling Time"), this), 1, 0);
+    driveLayout->addWidget(new QLabel(tr("Cooling Time(us)"), this), 1, 0);
     driveLayout->addWidget(editCoolingTime, 1, 1);
-    driveLayout->addWidget(new QLabel(tr("Drive Delay"), this), 1, 2);
+    driveLayout->addWidget(new QLabel(tr("Drive Delay(us)"), this), 1, 2);
     driveLayout->addWidget(editDriveDealy, 1, 3);
-    driveLayout->addWidget(btnConfirmSetting, 2, 0, 1, 2);
+    driveLayout->addWidget(new QLabel(tr("Sort Distance(um")), 2, 0);
+    driveLayout->addWidget(editSortDist, 2, 1);
+
+    driveLayout->addWidget(btnConfirmSetting, 2, 2, 1, 2);
 
     groupDrive->setLayout(driveLayout);
 
@@ -160,6 +164,12 @@ void SortingWidget::resetSortingStatus()
     lblCellSpeed->setText("0 m/s");
 }
 
+int SortingWidget::calculateCoe(int measureDist, int sortDist)
+{
+    int coe = sortDist * 16384 / measureDist;
+    return coe;
+}
+
 SortingWidget::~SortingWidget()
 {
     deleteLater();
@@ -191,8 +201,15 @@ void SortingWidget::changeDriveParameters()
     m_driveDelay = editDriveDealy->text().toInt();
     m_driveWidth = editDriveWidth->text().toInt();
     m_coolingTime = editCoolingTime->text().toInt();
+    m_sortDist = editSortDist->text().toInt();
 
-    emit driveParametersChanged(m_driveType, m_driveDelay, m_driveWidth, m_coolingTime);
+    int coe;
+    if (m_measureDist == 0 || m_sortDist == 0) {
+        coe = 0;
+    } else {
+        coe = calculateCoe(m_measureDist, m_sortDist);
+    }
+    emit driveParametersChanged(m_driveType, m_driveDelay, m_driveWidth, m_coolingTime, coe);
 }
 
 void SortingWidget::changeGate()

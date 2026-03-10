@@ -155,7 +155,7 @@ void AddNewPlotDialog::updateDefaultPlotName()
         }
         m_plotName = QString("%1 %2-%3").arg(Plot::plotTypeToString(m_plotType), m_xAxisName, m_yAxisName);
     } else {
-        m_yAxisId = -1;
+        m_yAxisId = 0;
         m_yAxisName = "Count";
         m_yMeasurementType = MeasurementType::Unknown;
         m_plotName = QString("Histogram %1").arg(m_xAxisName);

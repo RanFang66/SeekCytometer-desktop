@@ -7,8 +7,11 @@ BaseDAO::BaseDAO(QObject *parent)
 
 void BaseDAO::handleError(const QString functionName, const QSqlQuery &query) const
 {
-    QSqlError error = query.lastError();
+    const QSqlError error = query.lastError();
     if (error.isValid()) {
-        qWarning() << QString("Database error occured in %1:").arg(functionName) << error.text();
+        QString lastError = QString("Database error occured in %1: %2").arg(functionName, error.text().toUtf8());
+        qWarning() << lastError;
+
+        emit databaseError(error);
     }
 }

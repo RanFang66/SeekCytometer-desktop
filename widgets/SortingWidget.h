@@ -27,6 +27,7 @@ public:
     ~SortingWidget();
 
     const Gate getCurrentPopulation() const;
+    void setMeasureDist(int dist);
 
 public slots:
     void updatePopulation();
@@ -34,7 +35,7 @@ public slots:
 
 
 signals:
-    void driveParametersChanged(int type, int delay, int width, int coolingTime);
+    void driveParametersChanged(int type, int delay, int width, int coolingTime, int coe);
     void gateChanged(const Gate &gate);
 
 private slots:
@@ -52,12 +53,15 @@ private:
 
     void initSortingWidget();
     void resetSortingStatus();
+    int  calculateCoe(int measureDist, int sortDist);
 
 
     int m_driveType;
     int m_driveDelay;
     int m_driveWidth;
     int m_coolingTime;
+    int m_sortDist;
+    int m_measureDist;
 
     Gate m_currGate;
 
@@ -72,6 +76,7 @@ private:
     QLineEdit   *editDriveStrength;
     QLineEdit   *editCoolingTime;
     QLineEdit   *editDriveDealy;
+    QLineEdit   *editSortDist;
     QComboBox   *comboDriveMode;
     QComboBox   *comboPopulation;
     QComboBox   *comboSortMode;
@@ -92,5 +97,10 @@ private:
 
     // QProgressBar    *progressSort;
 };
+
+inline void SortingWidget::setMeasureDist(int dist)
+{
+    m_measureDist = dist;
+}
 
 #endif // SORTINGWIDGET_H

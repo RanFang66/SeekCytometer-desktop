@@ -42,6 +42,8 @@ void IntervalGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     painter->save();
     if (m_drawingFinished) {
+        QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
+        QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
         painter->setPen(QPen(Qt::red, 2));
         painter->drawLine(m_boundingRect.left(), m_boundingRect.center().y(), m_boundingRect.right(), m_boundingRect.center().y());
         painter->drawLine(m_boundingRect.topLeft(), m_boundingRect.bottomLeft());

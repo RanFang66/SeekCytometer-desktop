@@ -167,7 +167,7 @@ bool UdpCommClient::sendSpeedMeasureSetting(int preId, int postId, int preThresh
     }
 }
 
-bool UdpCommClient::sendDriveParameters(int type, int delay, int width, int coolingTime)
+bool UdpCommClient::sendDriveParameters(int type, int delay, int width, int coolingTime, int coe)
 {
     QByteArray data;
     QDataStream stream(&data, QIODevice::WriteOnly);
@@ -175,6 +175,7 @@ bool UdpCommClient::sendDriveParameters(int type, int delay, int width, int cool
     stream << delay;
     stream << width;
     stream << coolingTime;
+    stream << coe;
     if (!sendFrame(CommCmdType::CMD_DRIVE_SETTINGS, data)) {
         return false;
     } else {
