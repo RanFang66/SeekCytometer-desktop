@@ -29,7 +29,7 @@ void IntervalGateItem::finishDrawing(const QPointF &point)
 {
     updateGateData();
     prepareGeometryChange();
-    m_boundingRect.setWidth(mapFromScene(point).x());
+    setPos(0, 0);
     m_drawingFinished = true;
     update();
 }
@@ -44,6 +44,8 @@ void IntervalGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     if (m_drawingFinished) {
         QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
         QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
+        m_boundingRect = QRectF(p1, p2).normalized();
+
         painter->setPen(QPen(Qt::red, 2));
         painter->drawLine(m_boundingRect.left(), m_boundingRect.center().y(), m_boundingRect.right(), m_boundingRect.center().y());
         painter->drawLine(m_boundingRect.topLeft(), m_boundingRect.bottomLeft());
@@ -54,13 +56,16 @@ void IntervalGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         painter->drawLine(m_boundingRect.topLeft(), m_boundingRect.bottomLeft());
         painter->drawLine(m_boundingRect.topRight(), m_boundingRect.bottomRight());
     }
-    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
+    painter->drawText(m_boundingRect, Qt::AlignLeft|Qt::AlignTop, m_gate.name());
 
     painter->restore();
 }
 
 QRectF IntervalGateItem::boundingRect() const
 {
+    if (m_drawingFinished) {
+        return m_parent->plotArea();
+    }
     return m_boundingRect;
 }
 

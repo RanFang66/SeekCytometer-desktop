@@ -76,6 +76,8 @@ void MainWindow::setupToolBar()
     toolBar->addAction(menuBarManager->getShowWorkSheetAction());
     toolBar->addAction(menuBarManager->getShowAcquisitionAction());
     toolBar->addAction(menuBarManager->getShowSortingAction());
+    toolBar->addAction(menuBarManager->getShowCameraAction());
+    toolBar->addAction(menuBarManager->getShowWaveformAction());
     toolBar->addSeparator();
     toolBar->addAction(menuBarManager->getResetLayoutAction());
 }
@@ -87,6 +89,7 @@ void MainWindow::initDockWidgets()
         delete p;
     }
     setDockNestingEnabled(true);
+    setDockOptions(AllowTabbedDocks | AllowNestedDocks);
     setStyleSheet(
         "QDockWidget {"
         "   border: 3px solid #0a0a0a;"
@@ -132,6 +135,42 @@ void MainWindow::initDockWidgets()
     connect(experimentsBrowser, &ExperimentsBrowser::worksheetSelected, WorkSheetWidget::instance(), &WorkSheetWidget::addWorkSheetView);
     connect(experimentsBrowser, &ExperimentsBrowser::settingsSelected, cytometerSettingsWidget, &CytometerSettingsWidget::onCytometerSettingsChanged);
 
+    // 记录 tabified 分组，用于隐藏后恢复位置
+    tabGroups.append({WorkSheetWidget::instance(), WaveformWidget::instance()});
+    tabGroups.append({acquisitionWidget, SortingWidget::instance(), cameraWidget});
+
+    // Connect View menu actions to toggle dock widget visibility
+    auto bindDockToggle = [this](QAction *action, QDockWidget *dock) {
+        // Use triggered (not toggled) so programmatic setChecked won't cause feedback loop
+        QObject::connect(action, &QAction::triggered, this, [this, dock](bool checked) {
+            toggleDockWidget(dock, checked);
+        });
+        // Sync action state, but skip uncheck when dock is just on a background tab
+        QObject::connect(dock, &QDockWidget::visibilityChanged, this, [this, action, dock](bool visible) {
+            QSignalBlocker blocker(action);
+            if (!visible) {
+                for (const auto &group : tabGroups) {
+                    if (group.contains(dock)) {
+                        for (QDockWidget *peer : group) {
+                            if (peer != dock && peer->isVisible()) {
+                                return; // tab switch, not a real hide
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            action->setChecked(visible);
+        });
+    };
+
+    bindDockToggle(menuBarManager->getShowBrowserAction(), experimentsBrowser);
+    bindDockToggle(menuBarManager->getShowCytometerAction(), cytometerSettingsWidget);
+    bindDockToggle(menuBarManager->getShowWorkSheetAction(), WorkSheetWidget::instance());
+    bindDockToggle(menuBarManager->getShowAcquisitionAction(), acquisitionWidget);
+    bindDockToggle(menuBarManager->getShowSortingAction(), SortingWidget::instance());
+    bindDockToggle(menuBarManager->getShowCameraAction(), cameraWidget);
+    bindDockToggle(menuBarManager->getShowWaveformAction(), WaveformWidget::instance());
 
     QList<QDockWidget*> horizontalDocks = {
         experimentsBrowser,
@@ -140,6 +179,34 @@ void MainWindow::initDockWidgets()
     };
     QList<int> sizes = {1, 3, 3};  // 比例值（实际像素会根据窗口大小计算）
     resizeDocks(horizontalDocks, sizes, Qt::Horizontal);
+}
+
+void MainWindow::toggleDockWidget(QDockWidget *dock, bool visible)
+{
+    if (!visible) {
+        dock->setVisible(false);
+        return;
+    }
+
+    // 查找该 dock 是否属于某个 tabified 分组
+    for (const auto &group : tabGroups) {
+        if (!group.contains(dock))
+            continue;
+
+        // 找到同组中一个可见的 dock 作为锚点，重新 tabify
+        for (QDockWidget *peer : group) {
+            if (peer != dock && peer->isVisible()) {
+                dock->setVisible(true);
+                tabifyDockWidget(peer, dock);
+                dock->raise();
+                return;
+            }
+        }
+        break;
+    }
+
+    // 不属于任何 tab 分组，或同组全部隐藏，直接显示
+    dock->setVisible(true);
 }
 
 

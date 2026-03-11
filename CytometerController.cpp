@@ -139,7 +139,7 @@ void CytometerController::onEnterAccquiringState()
     // DataManager::instance().initDataManager(DetectorSettingsModel::instance()->detectorSettings());
     EventDataManager::instance().initEventDataManager(DetectorSettingsModel::instance()->detectorSettings());
 #if ENABLE_DEBUG
-    TestDataGenerator::instance().configTestGenerator(50, 200, 3000, 80000);
+    TestDataGenerator::instance().configTestGenerator(50, 200, -10000, 131072);
     // connect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
     connect(&TestDataGenerator::instance(), &TestDataGenerator::eventDataGenerated, &EventDataManager::instance(), &EventDataManager::addEvents);
     TestDataGenerator::instance().startGenerateData();
@@ -172,7 +172,7 @@ void CytometerController::onEnterSortingState()
     // DataManager::instance().initDataManager(DetectorSettingsModel::instance()->detectorSettings());
     EventDataManager::instance().initEventDataManager(DetectorSettingsModel::instance()->detectorSettings());
 #if ENABLE_DEBUG
-    TestDataGenerator::instance().configTestGenerator(50, 200, 0, 131072);
+    TestDataGenerator::instance().configTestGenerator(50, 200, -10000, 131072);
     // connect(&TestDataGenerator::instance(), &TestDataGenerator::testDataGenerated, &DataManager::instance(), &DataManager::addSamples);
     connect(&TestDataGenerator::instance(), &TestDataGenerator::eventDataGenerated, &EventDataManager::instance(), &EventDataManager::addEvents);
     TestDataGenerator::instance().startGenerateData();

@@ -37,9 +37,10 @@ void PolygonGateItem::updateGatePreview(const QPointF &point)
 
 void PolygonGateItem::finishDrawing(const QPointF &point)
 {
+    m_polygon << mapFromScene(point);
     updateGateData();
     prepareGeometryChange();
-    m_polygon << mapFromScene(point);
+    setPos(0, 0);
     m_drawingFinished = true;
     update();
 }
@@ -58,15 +59,13 @@ void PolygonGateItem::updateGateData()
 
 QRectF PolygonGateItem::boundingRect() const
 {
-    QRectF rect;
     if (m_drawingFinished) {
-        rect = m_polygon.boundingRect();
-    } else {
-        QPolygonF polygonTmp = m_polygon;
-        polygonTmp << m_previewPos;
-        rect = polygonTmp.boundingRect();
+        return m_parent->plotArea();
     }
 
+    QPolygonF polygonTmp = m_polygon;
+    polygonTmp << m_previewPos;
+    QRectF rect = polygonTmp.boundingRect();
     qreal margin = 1;
     rect.adjust(-margin, -margin, margin, margin);
     return rect;
@@ -79,14 +78,23 @@ void PolygonGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
     painter->save();
     if (m_drawingFinished) {
+        m_polygon.clear();
+        for (const QPointF &p : m_gate.points()) {
+            m_polygon << m_parent->mapPointToPlotArea(p);
+        }
+
         painter->setPen(QPen(Qt::red, 2));
         painter->drawPolygon(m_polygon);
+        painter->drawText(m_polygon.boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
     } else {
         painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
         painter->drawPolyline(m_polygon);
         painter->drawLine(m_polygon.last(), m_previewPos);
+
+        QPolygonF tmp = m_polygon;
+        tmp << m_previewPos;
+        painter->drawText(tmp.boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
     }
 
-    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
     painter->restore();
 }

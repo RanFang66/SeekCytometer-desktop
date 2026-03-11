@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QToolBar>
+#include <QDockWidget>
 #include "CustomStatusBar.h"
 #include "MenuBarManager.h"
 
@@ -22,11 +23,14 @@ private:
     MenuBarManager          *menuBarManager;
     QToolBar                *toolBar;
 
+    // 记录 tabified dock 分组，用于隐藏后恢复
+    QList<QList<QDockWidget*>> tabGroups;
 
     void initStatusBar();
     void initMenuBar();
     void setupToolBar();
     void initDockWidgets();
+    void toggleDockWidget(QDockWidget *dock, bool visible);
 
 };
 #endif // MAINWINDOW_H

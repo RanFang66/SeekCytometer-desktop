@@ -29,28 +29,38 @@ void EllipseGateItem::finishDrawing(const QPointF &point)
 {
     updateGateData();
     prepareGeometryChange();
-    m_ellipse = QRectF(QPointF(0, 0), mapFromScene(point));
+    setPos(0, 0);
     m_drawingFinished = true;
     update();
 }
 
 void EllipseGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    Q_UNUSED(option);
+    Q_UNUSED(widget);
+
     painter->save();
     if (m_drawingFinished) {
+        QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
+        QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
+        m_ellipse = QRectF(p1, p2).normalized();
+
         painter->setPen(QPen(Qt::red, 2));
         painter->drawEllipse(m_ellipse);
     } else {
         painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
         painter->drawEllipse(m_ellipse);
     }
-    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
+    painter->drawText(m_ellipse, Qt::AlignLeft|Qt::AlignTop, m_gate.name());
 
     painter->restore();
 }
 
 QRectF EllipseGateItem::boundingRect() const
 {
+    if (m_drawingFinished) {
+        return m_parent->plotArea();
+    }
     return m_ellipse;
 }
 
@@ -64,7 +74,13 @@ void EllipseGateItem::updateGateData()
 QPainterPath EllipseGateItem::shape() const
 {
     QPainterPath path;
-    path.addEllipse(m_ellipse);
+    if (m_drawingFinished) {
+        QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
+        QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
+        path.addEllipse(QRectF(p1, p2).normalized());
+    } else {
+        path.addEllipse(m_ellipse);
+    }
     return path;
 }
 

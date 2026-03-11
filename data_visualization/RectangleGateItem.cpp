@@ -13,8 +13,8 @@ RectangleGateItem::RectangleGateItem(const Gate &gate, PlotBase *parent)
     QPointF p1 = m_parent->mapPointToPlotArea(gate.points().at(0));
     QPointF p2 = m_parent->mapPointToPlotArea(gate.points().at(1));
 
-    m_rectangle = QRectF(p1, p2);
-    setFlags(ItemIsMovable | ItemIsSelectable);
+    m_rectangle = QRectF(p1, p2).normalized();
+    setFlags(ItemIsSelectable);
 }
 
 void RectangleGateItem::updateGatePreview(const QPointF &point)
@@ -30,7 +30,7 @@ void RectangleGateItem::finishDrawing(const QPointF &point)
 {
     updateGateData();
     prepareGeometryChange();
-    m_rectangle = QRectF(QPointF(0, 0), mapFromScene(point));
+    setPos(0, 0);
     m_drawingFinished = true;
     update();
 }
@@ -38,6 +38,9 @@ void RectangleGateItem::finishDrawing(const QPointF &point)
 
 QRectF RectangleGateItem::boundingRect() const
 {
+    if (m_drawingFinished) {
+        return m_parent->plotArea();
+    }
     return m_rectangle;
 }
 
@@ -56,14 +59,13 @@ void RectangleGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
-    QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
-    QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
-
-    m_rectangle = QRectF(p1, p2);
-
     painter->save();
 
     if (m_drawingFinished) {
+        QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
+        QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
+        m_rectangle = QRectF(p1, p2).normalized();
+
         painter->setPen(QPen(Qt::red, 2));
         painter->drawRect(m_rectangle);
     } else {
@@ -71,7 +73,7 @@ void RectangleGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         painter->drawRect(m_rectangle);
     }
 
-    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
+    painter->drawText(m_rectangle, Qt::AlignLeft|Qt::AlignTop, m_gate.name());
 
     painter->restore();
 }

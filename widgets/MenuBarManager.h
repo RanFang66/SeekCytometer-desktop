@@ -22,6 +22,8 @@ public:
     QAction *getShowWorkSheetAction() const { return showWorkSheet; }
     QAction *getShowAcquisitionAction() const { return showAcquisition; }
     QAction *getShowSortingAction() const { return showSorting; }
+    QAction *getShowCameraAction() const { return showCamera; }
+    QAction *getShowWaveformAction() const { return showWaveform; }
     QAction *getResetLayoutAction() const { return resetLayout; }
 
 private:
@@ -45,6 +47,8 @@ private:
     QAction *showWorkSheet;
     QAction *showAcquisition;
     QAction *showSorting;
+    QAction *showCamera;
+    QAction *showWaveform;
     QAction *resetLayout;
 
     QAction *userManage;

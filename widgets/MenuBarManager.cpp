@@ -56,10 +56,33 @@ void MenuBarManager::createViewMenu() {
     QMenu *viewMenu = menuBar->addMenu("View");
 
     showBrowser = new QAction("Broswer", mainWindow);
+    showBrowser->setCheckable(true);
+    showBrowser->setChecked(true);
+
     showCytometer = new QAction("Cytometer", mainWindow);
+    showCytometer->setCheckable(true);
+    showCytometer->setChecked(true);
+
     showWorkSheet = new QAction("WorkSheet", mainWindow);
+    showWorkSheet->setCheckable(true);
+    showWorkSheet->setChecked(true);
+
     showAcquisition = new QAction("Acquisition Control", mainWindow);
+    showAcquisition->setCheckable(true);
+    showAcquisition->setChecked(true);
+
     showSorting = new QAction("Sorting", mainWindow);
+    showSorting->setCheckable(true);
+    showSorting->setChecked(true);
+
+    showCamera = new QAction("Camera", mainWindow);
+    showCamera->setCheckable(true);
+    showCamera->setChecked(true);
+
+    showWaveform = new QAction("Waveform", mainWindow);
+    showWaveform->setCheckable(true);
+    showWaveform->setChecked(true);
+
     resetLayout = new QAction("Reset Layout", mainWindow);
 
     viewMenu->addAction(showBrowser);
@@ -67,6 +90,8 @@ void MenuBarManager::createViewMenu() {
     viewMenu->addAction(showWorkSheet);
     viewMenu->addAction(showAcquisition);
     viewMenu->addAction(showSorting);
+    viewMenu->addAction(showCamera);
+    viewMenu->addAction(showWaveform);
     viewMenu->addSeparator();
     viewMenu->addAction(resetLayout);
 }

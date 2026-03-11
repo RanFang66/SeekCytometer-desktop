@@ -11,8 +11,7 @@ QuadrantGateItem::QuadrantGateItem(const QPointF &origin, PlotBase *parent)
 QuadrantGateItem::QuadrantGateItem(const Gate &gate, PlotBase *parent)
     : GateItem{gate, parent}
 {
-    setPos(parent->plotArea().topLeft());
-    m_boundingRect = QRectF(0, 0, parent->plotArea().width(), parent->plotArea().height());
+    m_boundingRect = m_parent->plotArea();
     QPointF p = m_parent->mapPointToPlotArea(gate.points().at(0));
     m_origin = p;
 }
@@ -27,9 +26,10 @@ void QuadrantGateItem::updateGatePreview(const QPointF &origin)
 void QuadrantGateItem::finishDrawing(const QPointF &origin)
 {
     updateGateData();
-    m_origin = mapFromScene(origin);
-    m_drawingFinished = true;
     prepareGeometryChange();
+    setPos(0, 0);
+    m_boundingRect = m_parent->plotArea();
+    m_drawingFinished = true;
     update();
 }
 
@@ -42,6 +42,9 @@ void QuadrantGateItem::updateGateData()
 
 QRectF QuadrantGateItem::boundingRect() const
 {
+    if (m_drawingFinished) {
+        return m_parent->plotArea();
+    }
     return m_boundingRect;
 }
 
@@ -51,19 +54,26 @@ void QuadrantGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     Q_UNUSED(widget)
 
     painter->save();
+    QRectF plotArea = m_parent->plotArea();
+
     if (m_drawingFinished) {
+        QPointF origin = m_parent->mapPointToPlotArea(m_gate.points().at(0));
+        m_origin = origin;
+
         painter->setPen(QPen(Qt::red, 2));
-        painter->drawLine(0, m_origin.y(), m_boundingRect.width(), m_origin.y());
-        painter->drawLine(m_origin.x(), 0, m_origin.x(), m_boundingRect.height());
-        painter->drawEllipse(m_origin, 3, 3);
+        painter->drawLine(plotArea.left(), origin.y(), plotArea.right(), origin.y());
+        painter->drawLine(origin.x(), plotArea.top(), origin.x(), plotArea.bottom());
+        painter->drawEllipse(origin, 3, 3);
     } else {
+        QPointF origin = mapToParent(m_origin);
+
         painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
-        painter->drawLine(0, m_origin.y(), m_boundingRect.width(), m_origin.y());
-        painter->drawLine(m_origin.x(), 0, m_origin.x(), m_boundingRect.height());
-        painter->drawEllipse(m_origin, 3, 3);
+        painter->drawLine(plotArea.left(), origin.y(), plotArea.right(), origin.y());
+        painter->drawLine(origin.x(), plotArea.top(), origin.x(), plotArea.bottom());
+        painter->drawEllipse(origin, 3, 3);
     }
 
-    painter->drawText(boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
+    painter->drawText(plotArea, Qt::AlignLeft|Qt::AlignTop, m_gate.name());
 
     painter->restore();
 }

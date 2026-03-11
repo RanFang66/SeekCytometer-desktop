@@ -21,17 +21,6 @@ HistogramPlot::HistogramPlot(const Plot &plot, QGraphicsItem *parent)
 
 
 
-static double mapValueToRatio(double val, double minVal, double maxVal, CustomAxis::ScaleType type = CustomAxis::ScaleType::Linear)
-{
-    if (type == CustomAxis::Linear) {
-        return (val - minVal) / (maxVal - minVal);
-    } else {
-        double logMin = std::log10(minVal);
-        double logMax = std::log10(maxVal);
-        return (std::log10(val) - logMin) / (logMax - logMin);
-    }
-}
-
 void HistogramPlot::updateData(const QVector<int> &data)
 {
     if (data.isEmpty()) return;
@@ -40,7 +29,7 @@ void HistogramPlot::updateData(const QVector<int> &data)
     m_data.getMinMax(m_xMinVal, m_xMaxVal);
     const bool isLog = m_xAxis->isLog();
     m_bins.updateBins(m_xMinVal, m_xMaxVal, m_data.readAll(), isLog);
-    m_xAxis->setRange(m_bins.binStart(), m_bins.binEnd());
+    m_xAxis->setRange(m_bins.realBinStart(), m_bins.realBinEnd());
     m_yAxis->setRange(0.0, m_bins.maxBinVal() * 1.1);
     update();
 }
@@ -58,7 +47,7 @@ void HistogramPlot::paintPlot(QPainter *painter)
 
 
     for (int i = 0; i < m_plotArea.width(); i++) {
-        int xVal = mapXAxisToValue(i + m_plotArea.left());
+        double xVal = mapXAxisToValue(i + m_plotArea.left());
 
         int binVal = m_bins.getBinValue(xVal);
         if (binVal == 0) {
@@ -115,6 +104,12 @@ void HistogramPlot::autoAdjustAxisRange()
 void HistogramPlot::changeAxisType(CustomAxis::ScaleType type)
 {
     m_xAxis->setScaleType(type);
+    if (!m_data.isEmpty()) {
+        const bool isLog = m_xAxis->isLog();
+        m_bins.updateBins(m_xMinVal, m_xMaxVal, m_data.readAll(), isLog);
+        m_xAxis->setRange(m_bins.realBinStart(), m_bins.realBinEnd());
+        m_yAxis->setRange(0.0, m_bins.maxBinVal() * 1.1);
+    }
     update();
 }
 

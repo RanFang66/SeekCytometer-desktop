@@ -14,10 +14,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Sql)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql Network Charts StateMachine)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+# find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+# find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+# find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+# find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 
 
@@ -171,22 +171,22 @@ else()
 endif()
 
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::StateMachine)
-target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
-target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
-target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
+# target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
+# target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
+# target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
 target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
-target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
-target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
-target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
-target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+# target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+# target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+# target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+# target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 
 # 链接京航相机SDK
-# target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/ubuntu_x64/libJHCap.so)
-target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/win_x64/JHCap2.dll)
+target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/ubuntu_x64/libJHCap.so)
+# target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/win_x64/JHCap2.dll)
 
 
 # FOR DEBUG
-target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=1)
+target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=0)
 
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
