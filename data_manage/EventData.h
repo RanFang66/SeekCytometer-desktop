@@ -21,6 +21,8 @@ public:
     bool isRealSorted() const;
     quint8 validChPulse() const;
     bool isValidSpeedMeasure() const;
+    bool isValidChPulse(int channelId) const;
+
 
     const QVector<int> &getEnabledChannels() const;
 
@@ -96,6 +98,12 @@ inline quint8 EventData::validChPulse() const
 inline bool EventData::isValidSpeedMeasure() const
 {
     return isValidMeasure;
+}
+
+inline bool EventData::isValidChPulse(int channelId) const
+{
+    bool isValid = ((chPulseValid & (0x01 >> channelId)) != 0);
+    return isValid;
 }
 
 inline const QVector<int> &EventData::getEnabledChannels() const

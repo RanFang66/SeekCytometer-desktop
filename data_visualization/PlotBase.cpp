@@ -100,18 +100,19 @@ void PlotBase::updateLayout()
 
     m_titleArea = QRectF(validArea.left(), validArea.top(), validArea.width(), titleHeight);
 
+    // Y axis needs more width than axisHeight() provides, because tick labels
+    // are rendered horizontally and can be wider than the font height.
+    QFontMetrics fmYTick(m_yAxis->tickLabelFont());
+    qreal yTickLabelWidth = fmYTick.horizontalAdvance("0000000") + 8;
+    qreal yAxisWidth = m_yAxis->axisTitleHeight() + yTickLabelWidth;
+
     m_plotArea = validArea;
     m_plotArea.setTop(m_titleArea.bottom());
-    m_plotArea.setLeft(validArea.left() + m_yAxis->axisHeight());
+    m_plotArea.setLeft(validArea.left() + yAxisWidth);
     m_plotArea.setBottom(validArea.bottom() - m_xAxis->axisHeight());
 
     m_axisXArea = QRectF(m_plotArea.left(), m_plotArea.bottom(), m_plotArea.width(), m_xAxis->axisHeight());
-    m_axisYArea = QRectF(validArea.left(), m_plotArea.top(), m_yAxis->axisHeight(), m_plotArea.height());
-
-    qDebug() << "Title Area: " << m_titleArea;
-    qDebug() << "Plot Area: " << m_plotArea;
-    qDebug() << "Axis X Area: " << m_axisXArea;
-    qDebug() << "Axis Y Area: " << m_axisYArea;
+    m_axisYArea = QRectF(validArea.left(), m_plotArea.top(), yAxisWidth, m_plotArea.height());
 }
 
 void PlotBase::paintTitle(QPainter *painter)
@@ -137,9 +138,17 @@ void PlotBase::paintAxis(QPainter *painter)
     painter->setPen(Qt::black);
     painter->drawRect(m_plotArea);
 
+    const qreal tickMarkLen = 6;
+    const qreal tickMarkGap = 2;
 
-    // Draw X Axis
-    // ================= X Axis =================
+    QFontMetrics fmXTick(m_xAxis->tickLabelFont());
+    QFontMetrics fmYTick(m_yAxis->tickLabelFont());
+
+    // ================= X Axis Ticks =================
+    painter->setFont(m_xAxis->tickLabelFont());
+    qreal xTickLabelTop = m_axisXArea.top() + tickMarkLen + tickMarkGap;
+    qreal xTickLabelHeight = fmXTick.height();
+
     if (m_xAxis->scaleType() == CustomAxis::Logarithmic) {
 
         QList<AxisTick> ticks = m_xAxis->generateLogTicks();
@@ -151,21 +160,22 @@ void PlotBase::paintAxis(QPainter *painter)
             if (tick.isMajor) {
                 painter->drawLine(
                     QPointF(x, m_axisXArea.top()),
-                    QPointF(x, m_axisXArea.top() + 10)
+                    QPointF(x, m_axisXArea.top() + tickMarkLen)
                     );
 
                 QString label = QString("10^%1")
                                     .arg(int(std::round(std::log10(tick.value))));
+                qreal labelWidth = fmXTick.horizontalAdvance(label) + 6;
 
                 painter->drawText(
-                    QRectF(x - 30, m_axisXArea.top() + 12, 60, 20),
+                    QRectF(x - labelWidth / 2, xTickLabelTop, labelWidth, xTickLabelHeight),
                     Qt::AlignCenter,
                     label
                     );
             } else {
                 painter->drawLine(
                     QPointF(x, m_axisXArea.top()),
-                    QPointF(x, m_axisXArea.top() + 5)
+                    QPointF(x, m_axisXArea.top() + tickMarkLen * 0.6)
                     );
             }
         }
@@ -181,18 +191,36 @@ void PlotBase::paintAxis(QPainter *painter)
 
             painter->drawLine(
                 QPointF(x, m_axisXArea.top()),
-                QPointF(x, m_axisXArea.top() + 8)
+                QPointF(x, m_axisXArea.top() + tickMarkLen)
                 );
 
+            QString label = QString::number(val, 'f', 0);
+            qreal labelWidth = fmXTick.horizontalAdvance(label) + 6;
+
             painter->drawText(
-                QRectF(x - 25, m_axisXArea.top() + 8, 50, 20),
+                QRectF(x - labelWidth / 2, xTickLabelTop, labelWidth, xTickLabelHeight),
                 Qt::AlignCenter,
-                QString::number(val, 'f', 0)
+                label
                 );
         }
     }
 
-    // Draw Y Axis
+    // ================= X Axis Title =================
+    painter->setFont(m_xAxis->titleFont());
+    painter->drawText(
+        QRectF(m_plotArea.left(), m_axisXArea.top() + m_xAxis->axisTickHeight(), m_plotArea.width(), m_xAxis->axisTitleHeight()),
+        Qt::AlignCenter,
+        m_xAxis->axisName()
+        );
+
+    // ================= Y Axis Ticks =================
+    painter->setFont(m_yAxis->tickLabelFont());
+    // Tick labels are drawn to the left of tick marks, within the tick label area
+    qreal yTickLabelRight = m_axisYArea.right() - tickMarkLen - tickMarkGap;
+    qreal yTitleWidth = m_yAxis->axisTitleHeight();
+    qreal yTickLabelLeft = m_axisYArea.left() + yTitleWidth;
+    qreal yTickLabelWidth = yTickLabelRight - yTickLabelLeft;
+
     if (m_yAxis->scaleType() == CustomAxis::Logarithmic) {
 
         QList<AxisTick> ticks = m_yAxis->generateLogTicks();
@@ -202,31 +230,28 @@ void PlotBase::paintAxis(QPainter *painter)
             qreal y = m_plotArea.bottom() - ratio * m_plotArea.height();
 
             if (tick.isMajor) {
-                // 主刻度
                 painter->drawLine(
                     QPointF(m_axisYArea.right(), y),
-                    QPointF(m_axisYArea.right() - 10, y)
+                    QPointF(m_axisYArea.right() - tickMarkLen, y)
                     );
 
                 QString label = QString("10^%1")
                                     .arg(int(std::round(std::log10(tick.value))));
 
                 painter->drawText(
-                    QRectF(m_axisYArea.right() - 70, y - 10, 60, 20),
+                    QRectF(yTickLabelLeft, y - fmYTick.height() / 2.0, yTickLabelWidth, fmYTick.height()),
                     Qt::AlignRight | Qt::AlignVCenter,
                     label
                     );
             } else {
-                // 次刻度
                 painter->drawLine(
                     QPointF(m_axisYArea.right(), y),
-                    QPointF(m_axisYArea.right() - 5, y)
+                    QPointF(m_axisYArea.right() - tickMarkLen * 0.6, y)
                     );
             }
         }
 
     } else {
-        // ========= 线性轴 =========
         int yTickNum = m_yAxis->numTicks();
         if (yTickNum <= 0) yTickNum = 5;
 
@@ -237,21 +262,27 @@ void PlotBase::paintAxis(QPainter *painter)
 
             painter->drawLine(
                 QPointF(m_axisYArea.right(), y),
-                QPointF(m_axisYArea.right() - 8, y)
+                QPointF(m_axisYArea.right() - tickMarkLen, y)
                 );
 
             painter->drawText(
-                QRectF(m_axisYArea.right() - 60, y - 10, 60, 20),
-                Qt::AlignCenter,
+                QRectF(yTickLabelLeft, y - fmYTick.height() / 2.0, yTickLabelWidth, fmYTick.height()),
+                Qt::AlignRight | Qt::AlignVCenter,
                 QString::number(val, 'f', 0)
                 );
         }
     }
 
-    // Draw Y Axis Title At the Left of the Axis in Vertical Direction
+    // ================= Y Axis Title (vertical) =================
+    painter->setFont(m_yAxis->titleFont());
     painter->save();
     painter->rotate(-90);
-    painter->drawText(QRectF(-m_axisYArea.bottom(), m_axisYArea.left()-10, m_axisYArea.height(), 40), Qt::AlignCenter, m_yAxis->axisName());
+    // After -90° rotation: rotated_x = -original_y, rotated_y = original_x
+    painter->drawText(
+        QRectF(-m_axisYArea.bottom(), m_axisYArea.left(), m_axisYArea.height(), yTitleWidth),
+        Qt::AlignCenter,
+        m_yAxis->axisName()
+        );
     painter->restore();
 
     painter->restore();

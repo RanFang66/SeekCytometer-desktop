@@ -22,9 +22,11 @@ void EventDataManager::processHistogramData(PlotBase *plot, const QVector<EventD
     MeasurementType xType = histogramPlot->xMeasurementType();
 
 
-    QVector<int> histogram(data.size(), 0);
-    for (int i = 0; i < data.size(); ++i) {
-        histogram[i] = data.at(i).getData(channelX, xType);
+    QVector<int> histogram;
+    for (const EventData &aData : data) {
+        if (aData.isValidChPulse(channelX)) {
+            histogram.append(aData.getData(channelX, xType));
+        }
     }
     histogramPlot->updateData(histogram);
 }
