@@ -17,4 +17,5 @@ void WorkSheetView::initWorkSheetView()
     setRenderHint(QPainter::Antialiasing);
     setRenderHint(QPainter::TextAntialiasing);
     setRenderHint(QPainter::SmoothPixmapTransform);
+    setMouseTracking(true);
 }

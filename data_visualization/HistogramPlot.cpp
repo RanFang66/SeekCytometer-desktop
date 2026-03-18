@@ -1,8 +1,7 @@
 #include "HistogramPlot.h"
 
 #include <QPainter>
-#include <QGraphicsSceneMouseEvent>
-#include <QTimer>
+#include "AddGateButtonItem.h"
 
 HistogramPlot::HistogramPlot(const Plot &plot, QGraphicsItem *parent)
     : PlotBase(plot, parent), m_data(DEFAULT_DATA_LENGTH)
@@ -17,6 +16,10 @@ HistogramPlot::HistogramPlot(const Plot &plot, QGraphicsItem *parent)
     m_yAxis->setAxisName("Count");
 
     m_bins = HistoBins(m_plotArea.width());
+
+    // Gate button: histogram only supports interval gate
+    auto *intervalBtn = new AddGateButtonItem(GateType::IntervalGate, this);
+    intervalBtn->setPos(m_boundingRect.left() + 10, m_boundingRect.top() + 5);
 }
 
 
@@ -29,8 +32,11 @@ void HistogramPlot::updateData(const QVector<int> &data)
     m_data.getMinMax(m_xMinVal, m_xMaxVal);
     const bool isLog = m_xAxis->isLog();
     m_bins.updateBins(m_xMinVal, m_xMaxVal, m_data.readAll(), isLog);
-    m_xAxis->setRange(m_bins.realBinStart(), m_bins.realBinEnd());
-    m_yAxis->setRange(0.0, m_bins.maxBinVal() * 1.1);
+
+    if (!m_axisUnlocked) {
+        m_xAxis->setRange(m_bins.realBinStart(), m_bins.realBinEnd());
+        m_yAxis->setRange(0.0, m_bins.maxBinVal() * 1.1);
+    }
     update();
 }
 
@@ -54,14 +60,13 @@ void HistogramPlot::paintPlot(QPainter *painter)
             continue;
         }
 
-        qreal yTop = m_plotArea.bottom() - ((binVal - m_yAxis->minValue()) / m_yAxis->range()) * m_plotArea.height();
+        qreal yTop = mapValueToYAixs(binVal);
 
         if (yTop >= m_plotArea.bottom()) {
             continue;
         } else if (yTop < m_plotArea.top()) {
             yTop = m_plotArea.top();
         }
-
 
         qreal x = m_plotArea.left() + i;
         painter->drawLine(
@@ -111,155 +116,5 @@ void HistogramPlot::changeAxisType(CustomAxis::ScaleType type)
         m_yAxis->setRange(0.0, m_bins.maxBinVal() * 1.1);
     }
     update();
-}
-
-void HistogramPlot::wheelEvent(QGraphicsSceneWheelEvent *event)
-{
-    if (!m_axisUnlocked) {
-        event->ignore();
-        return;
-    }
-
-    QPointF pos = event->pos();
-
-    const double zoomFactor = (event->delta() > 0) ? 0.9 : 1.1;
-    QPointF dataPos = mapPlotAreaToPoint(pos);
-
-    if (m_axisXArea.contains(pos)) {
-        zoomAxis(m_xAxis, dataPos.x(), zoomFactor);
-    } else if (m_axisYArea.contains(pos)) {
-        zoomAxis(m_yAxis, dataPos.y(), zoomFactor);
-    } else {
-        QGraphicsObject::wheelEvent(event);
-        return;
-    }
-
-    update();
-    event->accept();
-}
-
-void HistogramPlot::zoomAxis(CustomAxis *axis, double center, double factor)
-{
-    double min = axis->minValue();
-    double max = axis->maxValue();
-
-    double newMin = center - (center - min) * factor;
-    double newMax = center + (max - center) * factor;
-
-    if (newMax - newMin < 1e-6)
-        return;
-
-    axis->setRange(newMin, newMax);
-}
-
-void HistogramPlot::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{ 
-    if (event->button() != Qt::LeftButton) {
-        QGraphicsObject::mousePressEvent(event);
-        return;
-    }
-    if (!m_axisUnlocked) {
-        if (!m_plotArea.contains(event->pos())) {
-            QGraphicsObject::mousePressEvent(event);
-            return;
-        }
-        m_cursorValue = mapPlotAreaToPoint(event->pos());
-        m_showCursorValue = true;
-        update();
-
-        QTimer::singleShot(4000, this, [this]() {
-            m_showCursorValue = false;
-            update();
-        });
-
-        event->accept();
-        return;
-    }
-
-    QPointF pos = event->pos();
-    m_rubberStartPos = pos;
-    m_rubberEndPos   = pos;
-    if (m_plotArea.contains(pos)) {
-        m_dragMode = DragRubberBand;
-    } else if (m_axisXArea.contains(pos)) {
-        m_dragMode = DragX;
-    } else if (m_axisYArea.contains(pos)) {
-        m_dragMode = DragY;
-    } else {
-        m_dragMode = NoDrag;
-        QGraphicsObject::mousePressEvent(event);
-        return;
-    }
-
-    event->accept();
-}
-
-void HistogramPlot::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
-{
-    if (!m_axisUnlocked || m_dragMode == NoDrag) {
-        QGraphicsObject::mouseMoveEvent(event);
-        return;
-    }
-
-    QPointF delta = event->pos() - m_rubberStartPos;
-    double dValue = 0;
-    switch (m_dragMode) {
-    case DragX:
-        dValue = delta.x() * m_xAxis->range() / m_plotArea.width();
-        m_xAxis->setRange(
-            m_xAxis->minValue() - dValue,
-            m_xAxis->maxValue() - dValue
-        );
-        m_rubberStartPos = event->pos();
-        break;
-    case DragY:
-        dValue = -delta.y() * m_yAxis->range() / m_plotArea.height();
-        m_yAxis->setRange(
-            m_yAxis->minValue() - dValue,
-            m_yAxis->maxValue() - dValue
-        );
-        m_rubberStartPos = event->pos();
-        break;
-    case DragRubberBand:
-        m_rubberEndPos = event->pos();
-        break;
-    default:
-        QGraphicsObject::mouseMoveEvent(event);
-        return;
-    }
-
-    update();
-    event->accept();
-}
-
-void HistogramPlot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
-{
-    if (m_dragMode != DragRubberBand || event->button() != Qt::LeftButton) {
-        QGraphicsObject::mouseReleaseEvent(event);
-        m_dragMode = NoDrag;
-        return;
-    }
-
-    m_dragMode = NoDrag;
-
-    QRectF rubberRect(m_rubberStartPos, m_rubberEndPos);
-    rubberRect = rubberRect.normalized() & m_plotArea;
-
-    if (rubberRect.width() < 10 || rubberRect.height() < 10) {
-        update();
-        return;
-    }
-
-    QPointF topRight = mapPlotAreaToPoint(rubberRect.topRight());
-    QPointF bottomLeft = mapPlotAreaToPoint(rubberRect.bottomLeft());
-
-
-    if (m_axisUnlocked) {
-        m_xAxis->setRange(bottomLeft.x(), topRight.x());
-        m_yAxis->setRange(bottomLeft.y(), topRight.y());
-    }
-
-    update();
-    event->accept();
 }
 

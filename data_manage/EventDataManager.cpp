@@ -42,10 +42,12 @@ void EventDataManager::processScatterData(PlotBase *plot, const QVector<EventDat
     MeasurementType yType = scatterPlot->yMeasurementType();
 
 
-    QVector<QPoint> scatterData(data.size());
-    for (int i = 0; i < data.size(); ++i) {
-        scatterData[i] = QPoint(data.at(i).getData(channelX, xType),
-                                 data.at(i).getData(channelY, yType));
+    QVector<QPoint> scatterData;
+    for (const EventData &aData : data) {
+        if (aData.isValidChPulse(channelX) && aData.isValidChPulse(channelY)) {
+            scatterData.append(QPoint(aData.getData(channelX, xType),
+                                       aData.getData(channelY, yType)));
+        }
     }
     scatterPlot->updateData(scatterData);
 }

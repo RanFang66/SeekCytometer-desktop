@@ -4,54 +4,55 @@
 RectangleGateItem::RectangleGateItem(const QPointF &startPos, PlotBase *parent)
     : GateItem{GateType::RectangleGate, startPos, parent}
 {
-    m_rectangle = QRectF(0, 0, 0, 0);
+    // Position at parent origin so all coordinates are in parent-local space
+    setPos(0, 0);
+    // m_startPos is set by base class to startPos (parent-local coords)
+    m_previewPos = startPos;
 }
 
 RectangleGateItem::RectangleGateItem(const Gate &gate, PlotBase *parent)
     : GateItem{gate, parent}
 {
-    QPointF p1 = m_parent->mapPointToPlotArea(gate.points().at(0));
-    QPointF p2 = m_parent->mapPointToPlotArea(gate.points().at(1));
-
-    m_rectangle = QRectF(p1, p2).normalized();
-    setFlags(ItemIsSelectable);
+    setPos(0, 0);
 }
 
-void RectangleGateItem::updateGatePreview(const QPointF &point)
+void RectangleGateItem::updateGatePreview(const QPointF &scenePoint)
 {
     prepareGeometryChange();
-    m_previewPos = mapFromScene(point);
-    m_rectangle.setWidth(m_previewPos.x());
-    m_rectangle.setHeight(m_previewPos.y());
+    // Convert scene coordinate to parent-local (since pos is 0,0, this equals parent's local coords)
+    m_previewPos = mapFromScene(scenePoint);
     update();
 }
 
-void RectangleGateItem::finishDrawing(const QPointF &point)
+void RectangleGateItem::finishDrawing(const QPointF &scenePoint)
 {
-    updateGateData();
-    prepareGeometryChange();
-    setPos(0, 0);
+    m_previewPos = mapFromScene(scenePoint);
+
+    // Convert both corner pixel positions to data values
+    QPointF dataP1 = m_parent->mapPlotAreaToPoint(m_startPos);
+    QPointF dataP2 = m_parent->mapPlotAreaToPoint(m_previewPos);
+
+    // Normalize: point 0 = (min_x, min_y), point 1 = (max_x, max_y)
+    QList<QPointF> points;
+    points.append(QPointF(qMin(dataP1.x(), dataP2.x()), qMin(dataP1.y(), dataP2.y())));
+    points.append(QPointF(qMax(dataP1.x(), dataP2.x()), qMax(dataP1.y(), dataP2.y())));
+    m_gate.setPoints(points);
+
     m_drawingFinished = true;
+    prepareGeometryChange();
     update();
 }
 
 
 QRectF RectangleGateItem::boundingRect() const
 {
-    if (m_drawingFinished) {
-        return m_parent->plotArea();
-    }
-    return m_rectangle;
+    // Always cover the full plot area so repaints are correct
+    return m_parent->plotArea();
 }
 
 void RectangleGateItem::updateGateData()
 {
-    QList<QPointF> points;
-    QPointF p1 = mapToParent(m_rectangle.topLeft());
-    QPointF p2 = mapToParent(m_rectangle.bottomRight());
-    points.append(m_parent->mapPlotAreaToPoint(p1));
-    points.append(m_parent->mapPlotAreaToPoint(p2));
-    m_gate.setPoints(points);
+    // Data values are set in finishDrawing; nothing additional needed
 }
 
 void RectangleGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -60,20 +61,31 @@ void RectangleGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem 
     Q_UNUSED(widget);
 
     painter->save();
+    QRectF plotArea = m_parent->plotArea();
 
     if (m_drawingFinished) {
+        // Map data coordinates back to pixel positions (re-computed each paint for axis changes)
         QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
         QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
-        m_rectangle = QRectF(p1, p2).normalized();
+        QRectF rect = QRectF(p1, p2).normalized();
+
+        // Clamp to plot area
+        rect = rect.intersected(plotArea);
 
         painter->setPen(QPen(Qt::red, 2));
-        painter->drawRect(m_rectangle);
+        painter->drawRect(rect);
+        painter->drawText(rect, Qt::AlignLeft | Qt::AlignTop, m_gate.name());
     } else {
-        painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
-        painter->drawRect(m_rectangle);
-    }
+        // Preview: draw rectangle between start and current mouse position
+        QRectF rect = QRectF(m_startPos, m_previewPos).normalized();
 
-    painter->drawText(m_rectangle, Qt::AlignLeft|Qt::AlignTop, m_gate.name());
+        // Clamp to plot area
+        rect = rect.intersected(plotArea);
+
+        painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
+        painter->drawRect(rect);
+        painter->drawText(rect, Qt::AlignLeft | Qt::AlignTop, m_gate.name());
+    }
 
     painter->restore();
 }

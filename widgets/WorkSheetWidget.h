@@ -36,8 +36,6 @@ private slots:
 
     void addNewPlot(QAction *action);
 
-    void addNewGate(QAction *action);
-
     void onUpdateTimerTimeout();
 
 private:
@@ -58,13 +56,6 @@ private:
     QAction *actionNewHistogram;
     QAction *actionNewScatter;
     QAction *actionNewContour;
-
-    // Actions for gates
-    QAction *actionNewRectGate;
-    QAction *actionNewPolyGate;
-    QAction *actionNewEllipseGate;
-    QAction *actionNewQuadGate;
-    QAction *actionNewIntervalGate;
 
     QTabWidget *tabWidget;
     WorkSheetView *currentWorkSheetView;

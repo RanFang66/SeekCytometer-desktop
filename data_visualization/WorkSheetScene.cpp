@@ -13,20 +13,39 @@ WorkSheetScene::WorkSheetScene(QObject *parent)
     : QGraphicsScene{parent}, m_drawState{DrawingState::DrawingIdle}, m_gateType(GateType::UnknownGate), m_activePlot{nullptr}, m_gateItem{nullptr}
 {}
 
-void WorkSheetScene::startDrawingGate(GateType gateType)
+void WorkSheetScene::startDrawingGateOnPlot(GateType gateType, PlotBase *plot)
 {
-    if (m_drawState == DrawingState::DrawingIdle) {
-        m_drawState = DrawingState::DrawingStarted;
-        m_gateType = gateType;
+    if (m_drawState != DrawingState::DrawingIdle || !plot)
+        return;
+
+    m_drawState = DrawingState::DrawingStarted;
+    m_gateType = gateType;
+    m_activePlot = plot;
+    m_activePlot->setFlag(QGraphicsItem::ItemIsMovable, false);
+}
+
+void WorkSheetScene::cancelDrawingGate()
+{
+    if (m_drawState == DrawingState::DrawingInProgress && m_gateItem) {
+        // Remove the preview gate item
+        delete m_gateItem;
+        m_gateItem = nullptr;
     }
+    if (m_activePlot) {
+        m_activePlot->setFlag(QGraphicsItem::ItemIsMovable, true);
+    }
+    m_gateItem = nullptr;
+    m_activePlot = nullptr;
+    m_startPosInPlot = QPointF();
+    m_gateType = GateType::UnknownGate;
+    m_drawState = DrawingState::DrawingIdle;
+    update();
 }
 
 void WorkSheetScene::finishDrawingGate(bool ok)
 {
     if (!ok && m_gateItem) {
-        removeItem(m_gateItem);
         delete m_gateItem;
-
         QMessageBox::warning(WorkSheetWidget::instance(), tr("Insert Gate Failed!"), tr("Insert Gate Failed"));
     } else {
         m_gateItems.append(m_gateItem);
@@ -54,7 +73,6 @@ PlotBase *WorkSheetScene::addNewPlot(PlotType plotType, const Plot &plot)
             plotBase = (histogramPlot);
             addItem(histogramPlot);
             m_plots.append(static_cast<PlotBase*>(histogramPlot));
-            // connect(histogramPlot, &PlotBase::deleteRequested, this, &WorkSheetScene::onDeletePlot);
         }
         break;
     case PlotType::SCATTER_PLOT:
@@ -63,7 +81,6 @@ PlotBase *WorkSheetScene::addNewPlot(PlotType plotType, const Plot &plot)
             plotBase = scatterPlot;
             addItem(scatterPlot);
             m_plots.append(static_cast<PlotBase*>(scatterPlot));
-            // connect(scatterPlot, &PlotBase::deleteRequested, this, &WorkSheetScene::onDeletePlot);
         }
         break;
     case PlotType::CONTOUR_PLOT:
@@ -83,7 +100,6 @@ void WorkSheetScene::addNewGate(GateType gateType, const Gate &gate, PlotBase *p
              << gate.pointsString();
 
     m_gateItems.append(gateItem);
-    // connect(gateItem, &GateItem::gateDeleteRequested, this, &WorkSheetScene::onDeleteGate);
     update();
 }
 
@@ -97,27 +113,45 @@ void WorkSheetScene::resetPlots()
 
 void WorkSheetScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (event->button() != Qt::LeftButton) {
+        QGraphicsScene::mousePressEvent(event);
+        return;
+    }
+
     switch (m_drawState) {
     case DrawingState::DrawingStarted: {
-        QGraphicsItem *clickedItem = itemAt(event->scenePos(), QTransform());
-        PlotBase *plotItem = qgraphicsitem_cast<PlotBase*>(clickedItem);
-        if (plotItem &&  plotItem->isInPlotArea(plotItem->mapFromScene(event->scenePos()))) {
-            m_activePlot = plotItem;
-            m_activePlot->setFlag(QGraphicsItem::ItemIsMovable, false);
+        // First click after button: active plot is already known
+        QPointF localPos = m_activePlot->mapFromScene(event->scenePos());
+        if (m_activePlot->isInPlotArea(localPos)) {
             m_drawState = DrawingState::DrawingInProgress;
-            m_startPosInPlot = m_activePlot->mapFromScene(event->scenePos());
+            m_startPosInPlot = m_activePlot->limitPointInPlot(localPos);
             m_gateItem = GateItemFactory::createGateItem(m_gateType, m_startPosInPlot, m_activePlot);
             m_gateItem->setGateName(QString("P%1").arg(m_gateItems.size()+1));
+            event->accept();
+            return;
         }
-    }
-    break;
-    case DrawingState::DrawingInProgress: {
-        PolygonGateItem *polygonGateItem = qgraphicsitem_cast<PolygonGateItem*>(m_gateItem);
-        if (m_gateType == GateType::PolygonGate && polygonGateItem) {
-            QPointF pos = m_activePlot->limitScenePointInPlot(event->scenePos());
-            polygonGateItem->updatePolygon(pos);
-        }
+        // Click outside the active plot's area - cancel drawing and fall through
+        cancelDrawingGate();
         break;
+    }
+    case DrawingState::DrawingInProgress: {
+        // Second click: finish drawing (or add vertex for polygon)
+        if (m_gateType == GateType::PolygonGate) {
+            PolygonGateItem *polygonGateItem = qgraphicsitem_cast<PolygonGateItem*>(m_gateItem);
+            if (polygonGateItem) {
+                QPointF pos = m_activePlot->limitScenePointInPlot(event->scenePos());
+                polygonGateItem->updatePolygon(pos);
+            }
+        } else {
+            // Finish drawing for interval/rectangle/ellipse/quadrant gates
+            QPointF pos = m_activePlot->limitScenePointInPlot(event->scenePos());
+            m_gateItem->finishDrawing(pos);
+            m_activePlot->setFlag(QGraphicsItem::ItemIsMovable, true);
+            m_drawState = DrawingState::DrawingFinished;
+            emit finishedDrawingGate(m_gateItem);
+        }
+        event->accept();
+        return;
     }
     case DrawingState::DrawingFinished:
     default:
@@ -128,22 +162,17 @@ void WorkSheetScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void WorkSheetScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (m_drawState == DrawingState::DrawingInProgress && m_activePlot) {
+    if (m_drawState == DrawingState::DrawingInProgress && m_activePlot && m_gateItem) {
         QPointF pos = m_activePlot->limitScenePointInPlot(event->scenePos());
         m_gateItem->updateGatePreview(pos);
+        event->accept();
+        return;
     }
     QGraphicsScene::mouseMoveEvent(event);
 }
 
 void WorkSheetScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton && m_drawState == DrawingState::DrawingInProgress && m_gateType != GateType::PolygonGate) {
-        m_drawState = DrawingState::DrawingFinished;
-        QPointF pos = m_activePlot->limitScenePointInPlot(event->scenePos());
-        m_gateItem->finishDrawing(pos);
-        m_activePlot->setFlag(QGraphicsItem::ItemIsMovable, true);
-        emit finishedDrawingGate(m_gateItem);
-    }
     QGraphicsScene::mouseReleaseEvent(event);
 }
 
@@ -155,6 +184,7 @@ void WorkSheetScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
             QPointF pos = m_activePlot->limitScenePointInPlot(event->scenePos());
             polygonGateItem->finishDrawing(pos);
             m_activePlot->setFlag(QGraphicsItem::ItemIsMovable, true);
+            m_drawState = DrawingState::DrawingFinished;
             emit finishedDrawingGate(m_gateItem);
         }
     }
@@ -180,7 +210,6 @@ void WorkSheetScene::onDeleteGate(GateItem *gate)
         removeItem(gate);
         m_gateItems.removeOne(gate);
         GatesModel::instance()->removeGate(gate->gate());
-        // GatesDAO().deleteGate(gate->getGateId());
         gate->deleteLater();
     }
 }
@@ -201,5 +230,4 @@ bool WorkSheetScene::segmentsIntersect(const QPointF &p1, const QPointF &p2, con
     if (o1 != o2 && o3 != o4) return true;
     return false;
 }
-
 

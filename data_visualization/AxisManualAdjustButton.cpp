@@ -118,8 +118,8 @@ void AxisManualAdjustButton::showAxisRangeDialog()
         // 验证输入
         if (xMinOk && xMaxOk && yMinOk && yMaxOk) {
             if (newXMin < newXMax && newYMin < newYMax) {
-                // 更新坐标轴范围
-                m_plot->updateAxisRange(newXMin, newXMax, newYMin, newYMax);
+                // 直接设置坐标轴范围
+                m_plot->setAxisRange(newXMin, newXMax, newYMin, newYMax);
                 m_plot->update();
             }
         }

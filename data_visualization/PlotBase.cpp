@@ -8,7 +8,10 @@
 #include <QFileDialog>
 #include <QImage>
 #include <QApplication>
+#include <QTimer>
 
+
+#include <QGraphicsSceneWheelEvent>
 
 #include "GateItem.h"
 #include "WorkSheetScene.h"
@@ -414,15 +417,10 @@ QPointF PlotBase::limitScenePointInPlot(const QPointF &pointInScene) const
 }
 
 
-void PlotBase::updateAxisRange(int xMin, int xMax, int yMin, int yMax)
+void PlotBase::setAxisRange(double xMin, double xMax, double yMin, double yMax)
 {
-    int xMinVal = m_xAxis->minValue() > xMin ? xMin : m_xAxis->minValue();
-    int xMaxVal = m_xAxis->maxValue() < xMax ? xMax : m_xAxis->maxValue();
-    int yMinVal = m_yAxis->minValue() > yMin ? yMin : m_yAxis->minValue();
-    int yMaxVal = m_yAxis->maxValue() < yMax ? yMax : m_yAxis->maxValue();
-
-    m_xAxis->setRange(xMinVal, xMaxVal);
-    m_yAxis->setRange(yMinVal, yMaxVal);
+    m_xAxis->setRange(xMin, xMax);
+    m_yAxis->setRange(yMin, yMax);
 }
 
 void PlotBase::updateAxisRanges(const Gate &gate)
@@ -574,9 +572,157 @@ void PlotBase::drawCursorValue(QPainter *painter)
 
 
 
+void PlotBase::wheelEvent(QGraphicsSceneWheelEvent *event)
+{
+    if (!m_axisUnlocked) {
+        event->ignore();
+        return;
+    }
 
+    QPointF pos = event->pos();
+    const double zoomFactor = (event->delta() > 0) ? 0.9 : 1.1;
+    QPointF dataPos = mapPlotAreaToPoint(pos);
 
+    if (m_plotArea.contains(pos)) {
+        zoomAxis(m_xAxis, dataPos.x(), zoomFactor);
+        zoomAxis(m_yAxis, dataPos.y(), zoomFactor);
+    } else if (m_axisXArea.contains(pos)) {
+        zoomAxis(m_xAxis, dataPos.x(), zoomFactor);
+    } else if (m_axisYArea.contains(pos)) {
+        zoomAxis(m_yAxis, dataPos.y(), zoomFactor);
+    } else {
+        QGraphicsObject::wheelEvent(event);
+        return;
+    }
 
+    update();
+    event->accept();
+}
+
+void PlotBase::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton) {
+        QGraphicsObject::mousePressEvent(event);
+        return;
+    }
+
+    if (!m_axisUnlocked) {
+        if (!m_plotArea.contains(event->pos())) {
+            QGraphicsObject::mousePressEvent(event);
+            return;
+        }
+        m_cursorValue = mapPlotAreaToPoint(event->pos());
+        m_showCursorValue = true;
+        update();
+
+        QTimer::singleShot(4000, this, [this]() {
+            m_showCursorValue = false;
+            update();
+        });
+
+        event->accept();
+        return;
+    }
+
+    QPointF pos = event->pos();
+    m_rubberStartPos = pos;
+    m_rubberEndPos   = pos;
+    if (m_plotArea.contains(pos)) {
+        m_dragMode = DragRubberBand;
+    } else if (m_axisXArea.contains(pos)) {
+        m_dragMode = DragX;
+    } else if (m_axisYArea.contains(pos)) {
+        m_dragMode = DragY;
+    } else {
+        m_dragMode = NoDrag;
+        QGraphicsObject::mousePressEvent(event);
+        return;
+    }
+
+    event->accept();
+}
+
+void PlotBase::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (!m_axisUnlocked || m_dragMode == NoDrag) {
+        QGraphicsObject::mouseMoveEvent(event);
+        return;
+    }
+
+    QPointF delta = event->pos() - m_rubberStartPos;
+    double dValue = 0;
+    switch (m_dragMode) {
+    case DragX:
+        dValue = delta.x() * m_xAxis->range() / m_plotArea.width();
+        m_xAxis->setRange(
+            m_xAxis->minValue() - dValue,
+            m_xAxis->maxValue() - dValue
+            );
+        m_rubberStartPos = event->pos();
+        break;
+    case DragY:
+        dValue = -delta.y() * m_yAxis->range() / m_plotArea.height();
+        m_yAxis->setRange(
+            m_yAxis->minValue() - dValue,
+            m_yAxis->maxValue() - dValue
+            );
+        m_rubberStartPos = event->pos();
+        break;
+    case DragRubberBand:
+        m_rubberEndPos = event->pos();
+        break;
+    default:
+        QGraphicsObject::mouseMoveEvent(event);
+        return;
+    }
+
+    update();
+    event->accept();
+}
+
+void PlotBase::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (m_dragMode != DragRubberBand || event->button() != Qt::LeftButton) {
+        QGraphicsObject::mouseReleaseEvent(event);
+        m_dragMode = NoDrag;
+        return;
+    }
+
+    m_dragMode = NoDrag;
+
+    QRectF rubberRect(m_rubberStartPos, m_rubberEndPos);
+    rubberRect = rubberRect.normalized() & m_plotArea;
+
+    if (rubberRect.width() < 5 || rubberRect.height() < 5) {
+        update();
+        return;
+    }
+
+    QPointF topRight = mapPlotAreaToPoint(rubberRect.topRight());
+    QPointF bottomLeft = mapPlotAreaToPoint(rubberRect.bottomLeft());
+
+    if (m_axisUnlocked) {
+        m_xAxis->setRange(bottomLeft.x(), topRight.x());
+        m_yAxis->setRange(bottomLeft.y(), topRight.y());
+    }
+
+    update();
+    event->accept();
+}
+
+void PlotBase::zoomAxis(CustomAxis *axis, double center, double factor)
+{
+    double min = axis->minValue();
+    double max = axis->maxValue();
+
+    double newMin = center - (center - min) * factor;
+    double newMax = center + (max - center) * factor;
+
+    if (newMax - newMin < 1e-6)
+        return;
+
+    axis->setRange(newMin, newMax);
+}
 
 // void PlotBase::mousePressEvent(QGraphicsSceneMouseEvent *event)
 // {

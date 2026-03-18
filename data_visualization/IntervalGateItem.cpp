@@ -4,36 +4,44 @@
 IntervalGateItem::IntervalGateItem(const QPointF &startPosInPlot, PlotBase *parent)
     : GateItem(GateType::IntervalGate, startPosInPlot, parent)
 {
-    setPos(QPointF(startPosInPlot.x(), parent->plotArea().top()));
-    m_boundingRect = QRectF(0, 0, 0, parent->plotArea().height());
+    // Position at parent origin so all coordinates are in parent-local space
+    setPos(0, 0);
+    // m_startPos is set by base class to startPosInPlot (parent-local coords)
+    m_previewPos = startPosInPlot;
 }
 
 IntervalGateItem::IntervalGateItem(const Gate &gate, PlotBase *parent)
     : GateItem{gate, parent}
 {
-    QPointF p1 = m_parent->mapPointToPlotArea(gate.points().at(0));
-    QPointF p2 = m_parent->mapPointToPlotArea(gate.points().at(1));
-
-    m_boundingRect = QRectF(p1, p2);
-}
-
-void IntervalGateItem::updateGatePreview(const QPointF &point)
-{
-    prepareGeometryChange();
-    m_previewPos = mapFromScene(point);
-    m_boundingRect.setWidth(m_previewPos.x());
-    update();
-}
-
-void IntervalGateItem::finishDrawing(const QPointF &point)
-{
-    updateGateData();
-    prepareGeometryChange();
     setPos(0, 0);
-    m_drawingFinished = true;
+}
+
+void IntervalGateItem::updateGatePreview(const QPointF &scenePoint)
+{
+    prepareGeometryChange();
+    // Convert scene coordinate to parent-local (since pos is 0,0, mapFromScene == parent's mapFromScene)
+    m_previewPos = mapFromScene(scenePoint);
     update();
 }
 
+void IntervalGateItem::finishDrawing(const QPointF &scenePoint)
+{
+    m_previewPos = mapFromScene(scenePoint);
+
+    // Convert the two x-pixel positions to data values
+    qreal x1 = m_parent->mapXAxisToValue(m_startPos.x());
+    qreal x2 = m_parent->mapXAxisToValue(m_previewPos.x());
+
+    // For interval gate, only x range matters; store y as 0
+    QList<QPointF> points;
+    points.append(QPointF(qMin(x1, x2), 0));
+    points.append(QPointF(qMax(x1, x2), 0));
+    m_gate.setPoints(points);
+
+    m_drawingFinished = true;
+    prepareGeometryChange();
+    update();
+}
 
 void IntervalGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
@@ -41,37 +49,54 @@ void IntervalGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     Q_UNUSED(widget);
 
     painter->save();
+    QRectF plotArea = m_parent->plotArea();
+    qreal top = plotArea.top();
+    qreal bottom = plotArea.bottom();
+    qreal midY = (top + bottom) / 2.0;
+
     if (m_drawingFinished) {
-        QPointF p1 = m_parent->mapPointToPlotArea(m_gate.points().at(0));
-        QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
-        m_boundingRect = QRectF(p1, p2).normalized();
+        // Map data x-values back to pixel positions (re-computed each paint for axis changes)
+        qreal left = m_parent->mapValueToXAixs(m_gate.points().at(0).x());
+        qreal right = m_parent->mapValueToXAixs(m_gate.points().at(1).x());
+        if (left > right) qSwap(left, right);
+
+        // Clamp to plot area
+        left = qMax(left, plotArea.left());
+        right = qMin(right, plotArea.right());
 
         painter->setPen(QPen(Qt::red, 2));
-        painter->drawLine(m_boundingRect.left(), m_boundingRect.center().y(), m_boundingRect.right(), m_boundingRect.center().y());
-        painter->drawLine(m_boundingRect.topLeft(), m_boundingRect.bottomLeft());
-        painter->drawLine(m_boundingRect.topRight(), m_boundingRect.bottomRight());
+        painter->drawLine(QPointF(left, top), QPointF(left, bottom));
+        painter->drawLine(QPointF(right, top), QPointF(right, bottom));
+        painter->drawLine(QPointF(left, midY), QPointF(right, midY));
+        painter->drawText(QRectF(left, top, right - left, bottom - top),
+                          Qt::AlignLeft | Qt::AlignTop, m_gate.name());
     } else {
+        // Preview: draw between start and current mouse position
+        qreal left = qMin(m_startPos.x(), m_previewPos.x());
+        qreal right = qMax(m_startPos.x(), m_previewPos.x());
+
+        // Clamp to plot area
+        left = qMax(left, plotArea.left());
+        right = qMin(right, plotArea.right());
+
         painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
-        painter->drawLine(m_boundingRect.left(), m_boundingRect.center().y(), m_boundingRect.right(), m_boundingRect.center().y());
-        painter->drawLine(m_boundingRect.topLeft(), m_boundingRect.bottomLeft());
-        painter->drawLine(m_boundingRect.topRight(), m_boundingRect.bottomRight());
+        painter->drawLine(QPointF(left, top), QPointF(left, bottom));
+        painter->drawLine(QPointF(right, top), QPointF(right, bottom));
+        painter->drawLine(QPointF(left, midY), QPointF(right, midY));
+        painter->drawText(QRectF(left, top, right - left, bottom - top),
+                          Qt::AlignLeft | Qt::AlignTop, m_gate.name());
     }
-    painter->drawText(m_boundingRect, Qt::AlignLeft|Qt::AlignTop, m_gate.name());
 
     painter->restore();
 }
 
 QRectF IntervalGateItem::boundingRect() const
 {
-    if (m_drawingFinished) {
-        return m_parent->plotArea();
-    }
-    return m_boundingRect;
+    // Always cover the full plot area so repaints are correct
+    return m_parent->plotArea();
 }
 
 void IntervalGateItem::updateGateData()
 {
-    QPointF p1 = mapToParent(m_boundingRect.topLeft());
-    QPointF p2 = mapToParent(m_boundingRect.bottomRight());
-    m_gate.setPoints({m_parent->mapPlotAreaToPoint(p1), m_parent->mapPlotAreaToPoint(p2)});
+    // Data values are set in finishDrawing; nothing additional needed
 }

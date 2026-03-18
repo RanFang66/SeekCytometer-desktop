@@ -18,12 +18,18 @@ class WorkSheetScene : public QGraphicsScene
     Q_OBJECT
 public:
     explicit WorkSheetScene(QObject *parent = nullptr);
-    void startDrawingGate(GateType gateType);
+
+    // Gate drawing - called from AddGateButtonItem on each plot
+    void startDrawingGateOnPlot(GateType gateType, PlotBase *plot);
+    void cancelDrawingGate();
     bool isDrawingGate() const { return m_drawState != DrawingState::DrawingIdle; }
     void finishDrawingGate(bool ok);
+
+    GateType  drawingGateType() const { return m_gateType; }
+    PlotBase* activePlot() const { return m_activePlot; }
+
     PlotBase* addNewPlot(PlotType plotType, const Plot &plot);
     void addNewGate(GateType gateType, const Gate &gate, PlotBase *parent);
-
 
     void resetPlots();
     QList<PlotBase*> plots() const { return m_plots; }
@@ -53,9 +59,6 @@ private:
     GateItem        *m_gateItem;
     QPointF         m_startPosInPlot;
 
-    void startDrawing();
-    void endDrawing();
-    void updateDrawing(QPointF pos);
     bool segmentsIntersect(const QPointF &p1, const QPointF &p2, const QPointF &q1, const QPointF &q2);
 };
 

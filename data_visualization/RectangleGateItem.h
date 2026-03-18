@@ -9,7 +9,6 @@ class RectangleGateItem : public GateItem
 public:
     RectangleGateItem(const QPointF &startPos, PlotBase *parent = nullptr);
     RectangleGateItem(const Gate &gate, PlotBase *parent = nullptr);
-    void updateRectangle(qreal w, qreal h);
 
     void updateGatePreview(const QPointF &point) override;
     void finishDrawing(const QPointF &point) override;
@@ -19,9 +18,6 @@ public:
 
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-
-private:
-    QRectF m_rectangle;
 };
 
 #endif // RECTANGLEGATEITEM_H

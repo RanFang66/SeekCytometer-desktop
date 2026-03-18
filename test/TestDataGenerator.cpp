@@ -96,6 +96,10 @@ void TestDataGenerator::generateEventData()
     int sortedNum = 0;
     int distTime = 0;
     int timeBuff = 0;
+    int validCh = 0;
+    for (int ch : EventDataManager::instance().enabledChannels()) {
+        validCh |= (1 << ch);
+    }
     for (int count = 0; count < m_dataCount; count++) {
         m_eventId++;
         EventData event(EventDataManager::instance().enabledChannels());
@@ -116,6 +120,7 @@ void TestDataGenerator::generateEventData()
         event.setPostTimeUs(m_currentTime);
         event.setDiffTimeUs(distTime);
         event.setValidSpeedMeasure(true);
+        event.setValidChPulse(validCh);
 
         double mean = (m_dataMax  + m_dataMin)  / 2;
         double stddev = (m_dataMax - m_dataMin) / 6;

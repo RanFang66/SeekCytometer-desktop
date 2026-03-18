@@ -102,7 +102,7 @@ inline bool EventData::isValidSpeedMeasure() const
 
 inline bool EventData::isValidChPulse(int channelId) const
 {
-    bool isValid = ((chPulseValid & (0x01 >> channelId)) != 0);
+    bool isValid = ((chPulseValid & (0x01 << channelId)) != 0);
     return isValid;
 }
 

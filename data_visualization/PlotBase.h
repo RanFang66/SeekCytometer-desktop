@@ -53,7 +53,7 @@ public:
 
     virtual void autoAdjustAxisRange() = 0;
 
-    void updateAxisRange(int xMin, int xMax, int yMin, int yMax);
+    void setAxisRange(double xMin, double xMax, double yMin, double yMax);
 
     void updateAxisRanges(const Gate &gate);
 
@@ -100,9 +100,12 @@ protected:
 
     void drawCursorValue(QPainter *painter);
 
-    // void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-    // void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
-    // void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    void wheelEvent(QGraphicsSceneWheelEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+    void zoomAxis(CustomAxis *axis, double center, double factor);
 
     Plot        m_plot;
     CustomAxis *m_xAxis;
@@ -117,7 +120,7 @@ protected:
     QFont m_titleFont;
 
     bool m_axisUnlocked;
-    bool    m_showCursorValue;
+    bool    m_showCursorValue = false;
     QPointF m_cursorValue;
 
     static constexpr qreal PLOT_MARGIN = 10.0;

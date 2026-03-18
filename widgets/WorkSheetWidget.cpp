@@ -83,7 +83,7 @@ void WorkSheetWidget::addWorkSheetView(int worksheetId)
             for (const Gate &gate : m_model->getGateList()) {
                 if (gate.xAxisSettingId() == plot.axisXId() && gate.yAxisSettingId() == plot.axisYId()
                     && gate.xMeasurementType() == plot.xMeasurementType() && gate.yMeasurementType() == plot.yMeasurementType()) {
-                plotBase->updateAxisRanges(gate);
+                    plotBase->updateAxisRanges(gate);
                     workSheetView->scene()->addNewGate(gate.gateType(), gate, plotBase);
                 }
             }
@@ -151,32 +151,7 @@ void WorkSheetWidget::initDockWidget()
     toolBar->addSeparator();
 
 
-    QActionGroup *gateGroup = new QActionGroup(this);
-    actionNewIntervalGate = new QAction("New IntervalGate", this);
-    actionNewRectGate = new QAction("New RectGate", this);
-    actionNewPolyGate = new QAction("New PolyGate", this);
-    actionNewEllipseGate = new QAction("New EllipseGate", this);
-    actionNewQuadGate = new QAction("New QuadGate", this);
-
-    actionNewIntervalGate->setData(QVariant::fromValue(GateType::IntervalGate));
-    actionNewRectGate->setData(QVariant::fromValue(GateType::RectangleGate));
-    actionNewPolyGate->setData(QVariant::fromValue(GateType::PolygonGate));
-    actionNewEllipseGate->setData(QVariant::fromValue(GateType::EllipseGate));
-    actionNewQuadGate->setData(QVariant::fromValue(GateType::QuadrantGate));
-
-    gateGroup->addAction(actionNewIntervalGate);
-    gateGroup->addAction(actionNewRectGate);
-    gateGroup->addAction(actionNewPolyGate);
-    gateGroup->addAction(actionNewEllipseGate);
-    gateGroup->addAction(actionNewQuadGate);
-
-    toolBar->addAction(actionNewIntervalGate);
-    toolBar->addAction(actionNewRectGate);
-    toolBar->addAction(actionNewPolyGate);
-    toolBar->addAction(actionNewEllipseGate);
-    toolBar->addAction(actionNewQuadGate);
-
-    toolBar->addSeparator();
+    // Gate buttons are now on each plot (AddGateButtonItem), no longer on the toolbar
 
 
     tabWidget = new QTabWidget(mainWidget);
@@ -211,7 +186,6 @@ void WorkSheetWidget::initDockWidget()
     setWidget(mainWidget);
     connect(tabWidget, &QTabWidget::currentChanged, this, &WorkSheetWidget::onCurrentTabChanged);
     connect(plotGroup, &QActionGroup::triggered, this, &WorkSheetWidget::addNewPlot);
-    connect(gateGroup, &QActionGroup::triggered, this, &WorkSheetWidget::addNewGate);
     connect(m_updateTimer, &QTimer::timeout, this, &WorkSheetWidget::onUpdateTimerTimeout);
 
 }
@@ -246,15 +220,6 @@ void WorkSheetWidget::addNewPlot(QAction *action)
     addPlot(plotType);
 }
 
-
-void WorkSheetWidget::addNewGate(QAction *action)
-{
-    if (!currentWorkSheetScene) {
-        return;
-    }
-    GateType gateType = action->data().value<GateType>();
-    currentWorkSheetScene->startDrawingGate(gateType);
-}
 
 void WorkSheetWidget::onUpdateTimerTimeout()
 {

@@ -17,9 +17,6 @@ public:
     void updateGateData() override;
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-
-private:
-    QRectF m_boundingRect;
 };
 
 #endif // INTERVALGATEITEM_H

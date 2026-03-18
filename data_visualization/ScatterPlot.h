@@ -45,19 +45,9 @@ protected:
     void autoAdjustAxisRange() override;
     void changeAxisType(CustomAxis::ScaleType type) override;
 
-    void wheelEvent(QGraphicsSceneWheelEvent *event) override;
-    void zoomAxis(CustomAxis *axis, double center, double factor);
-
-    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
-
-
 private:
     ChartBuffer<QPoint, PointMinMax>     m_data;
     static constexpr int    DEFAULT_DATA_LENGTH = 60000;
-
-    qreal m_xMin, m_xMax, m_yMin, m_yMax;
 };
 
 

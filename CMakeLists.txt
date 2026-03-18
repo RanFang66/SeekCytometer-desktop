@@ -143,6 +143,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         data_visualization/AxisAutoAdjustButton.h data_visualization/AxisAutoAdjustButton.cpp
         data_visualization/AxiTypeSwitchButton.h data_visualization/AxiTypeSwitchButton.cpp
         data_visualization/AxisManualAdjustButton.h data_visualization/AxisManualAdjustButton.cpp
+        data_visualization/AddGateButtonItem.h data_visualization/AddGateButtonItem.cpp
 
         camera/CameraController.h camera/CameraController.cpp
         camera/CameraWidget.h camera/CameraWidget.cpp
@@ -186,7 +187,7 @@ target_link_libraries(SeekCytometer PRIVATE ${CMAKE_SOURCE_DIR}/camera_lib/ubunt
 
 
 # FOR DEBUG
-target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=0)
+target_compile_definitions(SeekCytometer PRIVATE ENABLE_DEBUG=1)
 
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
