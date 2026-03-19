@@ -8,7 +8,9 @@
 #include <QTimer>
 
 #include "GatesModel.h"
+#include "GateStatistics.h"
 #include <QTableView>
+#include <QPushButton>
 
 class WorkSheetWidget : public QDockWidget
 {
@@ -38,6 +40,9 @@ private slots:
 
     void onUpdateTimerTimeout();
 
+    void onUpdateStatisticsClicked();
+    void onDeleteGateClicked();
+
 private:
     explicit WorkSheetWidget(const QString &title, QWidget *parent = nullptr);
     WorkSheetWidget &operator=(const WorkSheetWidget &) = delete;
@@ -46,6 +51,7 @@ private:
 
     void initDockWidget();
     void addPlot(PlotType type);
+    void updateGateStatistics();
 
     // General actions
     QAction *actionPrint;
@@ -69,6 +75,9 @@ private:
 
     QTableView *tableView;
     GatesModel *m_model;
+
+    QPushButton *btnUpdateStats;
+    QPushButton *btnDeleteGate;
 
 };
 

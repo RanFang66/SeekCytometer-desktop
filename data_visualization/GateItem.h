@@ -16,10 +16,13 @@ public:
     explicit GateItem(const Gate &gate, PlotBase *parent = nullptr);
 
     const Gate  &gate() const { return m_gate; }
+    PlotBase    *parentPlot() const { return m_parent; }
     QString getGateName() const {return m_gate.name(); }
     int     getGateId() const {return m_gate.id();}
     void    setGateName(const QString &name) { m_gate.setName(name); }
     void    setGateId(int id) { m_gate.setId(id);}
+    void    setGateColor(const QColor &color) { m_gate.setColor(color); }
+    QColor  getGateColor() const { return m_gate.color(); }
 
     virtual void        updateGatePreview(const QPointF &point) = 0;
     virtual void        finishDrawing(const QPointF &point) = 0;

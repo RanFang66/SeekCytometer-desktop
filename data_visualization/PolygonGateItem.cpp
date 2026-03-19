@@ -83,11 +83,11 @@ void PolygonGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
             m_polygon << m_parent->mapPointToPlotArea(p);
         }
 
-        painter->setPen(QPen(Qt::red, 2));
+        painter->setPen(QPen(m_gate.color(), 2));
         painter->drawPolygon(m_polygon);
         painter->drawText(m_polygon.boundingRect(), Qt::AlignLeft|Qt::AlignTop, m_gate.name());
     } else {
-        painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
+        painter->setPen(QPen(m_gate.color(), 2, Qt::DashDotLine));
         painter->drawPolyline(m_polygon);
         painter->drawLine(m_polygon.last(), m_previewPos);
 

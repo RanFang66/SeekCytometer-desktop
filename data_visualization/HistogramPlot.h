@@ -133,6 +133,8 @@ class HistogramPlot : public PlotBase
 public:
     explicit HistogramPlot(const Plot &plot, QGraphicsItem *parent = nullptr);
 
+    QVector<int> readAllData() { return m_data.readAll(); }
+
 public slots:
     void updateData(const QVector<int> &data);
 

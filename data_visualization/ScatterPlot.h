@@ -36,6 +36,8 @@ class ScatterPlot : public PlotBase
 public:
     ScatterPlot(const Plot &plot, QGraphicsItem *parent = nullptr);
 
+    QVector<QPoint> readAllData() { return m_data.readAll(); }
+
 public slots:
     void updateData(const QVector<QPoint> &data);
 

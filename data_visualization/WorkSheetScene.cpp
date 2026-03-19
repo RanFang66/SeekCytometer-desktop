@@ -215,6 +215,18 @@ void WorkSheetScene::onDeleteGate(GateItem *gate)
 }
 
 
+void WorkSheetScene::removeGateItem(int gateId)
+{
+    for (int i = 0; i < m_gateItems.size(); ++i) {
+        if (m_gateItems[i]->getGateId() == gateId) {
+            GateItem *item = m_gateItems.takeAt(i);
+            removeItem(item);
+            item->deleteLater();
+            break;
+        }
+    }
+}
+
 bool WorkSheetScene::segmentsIntersect(const QPointF &p1, const QPointF &p2, const QPointF &q1, const QPointF &q2)
 {
     auto orientation = [](const QPointF &a, const QPointF &b, const QPointF &c) {

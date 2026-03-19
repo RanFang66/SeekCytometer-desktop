@@ -8,5 +8,12 @@
         <file>resource/images/icons/auto_adjust.png</file>
         <file>resource/images/icons/linear_axis.png</file>
         <file>resource/images/icons/log_axis.png</file>
+        <file>resource/images/icons/new_experiment.svg</file>
+        <file>resource/images/icons/new_specimen.svg</file>
+        <file>resource/images/icons/new_tube.svg</file>
+        <file>resource/images/icons/new_settings.svg</file>
+        <file>resource/images/icons/new_worksheet.svg</file>
+        <file>resource/images/icons/expand_all.svg</file>
+        <file>resource/images/icons/collapse_all.svg</file>
     </qresource>
 </RCC>

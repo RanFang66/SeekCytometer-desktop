@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QColor>
 #include "MeasurementTypeHelper.h"
 #include "DetectorSettings.h"
 enum class GateType
@@ -58,6 +59,9 @@ public:
     MeasurementType xMeasurementType() const;
     MeasurementType yMeasurementType() const;
     int parentId() const;
+    QColor color() const;
+
+    static QColor defaultGateColor(int index);
 
     void setId(int id);
     void setWorksheetId(int worksheetId);
@@ -70,6 +74,7 @@ public:
     void setXMeasurementType(MeasurementType type);
     void setYMeasurementType(MeasurementType type);
     void setGateType(GateType type);
+    void setColor(const QColor &color);
 
 
 private:
@@ -83,6 +88,7 @@ private:
     MeasurementType     m_xMeasurementType;
     MeasurementType     m_yMeasurementType;
     int                 m_parentId;
+    QColor              m_color;
 
     DetectorSettings    m_xAxisSetting;
     DetectorSettings    m_yAxisSetting;
@@ -213,6 +219,34 @@ inline void Gate::setYMeasurementType(MeasurementType type)
 inline void Gate::setGateType(GateType type)
 {
     m_type = type;
+}
+
+inline QColor Gate::color() const
+{
+    return m_color;
+}
+
+inline void Gate::setColor(const QColor &color)
+{
+    m_color = color;
+}
+
+inline QColor Gate::defaultGateColor(int index)
+{
+    static const QColor palette[] = {
+        QColor(0x1f, 0x77, 0xb4), // blue
+        QColor(0xff, 0x7f, 0x0e), // orange
+        QColor(0x2c, 0xa0, 0x2c), // green
+        QColor(0xd6, 0x27, 0x28), // red
+        QColor(0x94, 0x67, 0xbd), // purple
+        QColor(0x8c, 0x56, 0x4b), // brown
+        QColor(0xe3, 0x77, 0xc2), // pink
+        QColor(0xbc, 0xbd, 0x22), // olive
+        QColor(0x17, 0xbe, 0xcf), // cyan
+        QColor(0x7f, 0x7f, 0x7f), // gray
+    };
+    static const int paletteSize = sizeof(palette) / sizeof(palette[0]);
+    return palette[index % paletteSize];
 }
 
 

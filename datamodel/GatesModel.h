@@ -4,7 +4,9 @@
 #include <QAbstractItemModel>
 #include <QObject>
 #include "GatesDAO.h"
+#include "GateStatistics.h"
 #include <QMutex>
+#include <QHash>
 
 
 class GatesModel : public QAbstractTableModel
@@ -16,9 +18,14 @@ public:
         WorkSheetIdColumn,
         GateNameColumn,
         GateTypeColumn,
+        ColorColumn,
         XAxisColumn,
         YAxisColumn,
         GatePointsColumn,
+        CountColumn,
+        MeanColumn,
+        StdDevColumn,
+        CVColumn,
         GateColumnCount,
     };
     static GatesModel *instance() {
@@ -50,13 +57,16 @@ public:
     const Gate getGate(int row) const;
     const QList<Gate> &getGateList() const;
 
+    void updateGateStatistics(int gateId, const GateStatistics &stats);
+
 private:
     explicit GatesModel(QObject *parent = nullptr);
 
 
     QList<Gate> m_gateList;
+    QHash<int, GateStatistics> m_statistics; // gateId -> statistics
     GatesDAO gatesDao;
-    const QStringList m_headerData = {"ID", "WorkSheetID", "Name", "Type", "X Axis", "Y Axis", "Points"};
+    const QStringList m_headerData = {"ID", "WorkSheetID", "Name", "Type", "Color", "X Axis", "Y Axis", "Points", "Count", "Mean", "StdDev", "CV"};
 
     QMutex m_mutex;
 };

@@ -45,10 +45,10 @@ void EllipseGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
         QPointF p2 = m_parent->mapPointToPlotArea(m_gate.points().at(1));
         m_ellipse = QRectF(p1, p2).normalized();
 
-        painter->setPen(QPen(Qt::red, 2));
+        painter->setPen(QPen(m_gate.color(), 2));
         painter->drawEllipse(m_ellipse);
     } else {
-        painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
+        painter->setPen(QPen(m_gate.color(), 2, Qt::DashDotLine));
         painter->drawEllipse(m_ellipse);
     }
     painter->drawText(m_ellipse, Qt::AlignLeft|Qt::AlignTop, m_gate.name());

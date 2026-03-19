@@ -49,16 +49,30 @@ void ExperimentsBrowser::initDockWidget()
     QWidget *mainWidget = new QWidget();
 
     QToolBar *toolBar = new QToolBar("ToolBar", mainWidget);
+    toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    toolBar->setIconSize(QSize(20, 20));
     QActionGroup *addNodeGroup = new QActionGroup(toolBar);
 
-    addExperiment = new QAction("New Experiment", mainWidget);
-    addSpecimen = new QAction("New Specimen", mainWidget);
-    addTube = new QAction("New Tube", mainWidget);
-    addSettings = new QAction("New CytometerSettings", mainWidget);
-    addWorkSheet = new QAction("New WorkSheet", mainWidget);
+    addExperiment = new QAction(QIcon(":/resource/images/icons/new_experiment.svg"), "", mainWidget);
+    addExperiment->setToolTip(tr("New Experiment"));
 
-    expandAll = new QAction("Expand All", mainWidget);
-    collapseAll = new QAction("Collapse All", mainWidget);
+    addSpecimen = new QAction(QIcon(":/resource/images/icons/new_specimen.svg"), "", mainWidget);
+    addSpecimen->setToolTip(tr("New Specimen"));
+
+    addTube = new QAction(QIcon(":/resource/images/icons/new_tube.svg"), "", mainWidget);
+    addTube->setToolTip(tr("New Tube"));
+
+    addSettings = new QAction(QIcon(":/resource/images/icons/new_settings.svg"), "", mainWidget);
+    addSettings->setToolTip(tr("New Cytometer Settings"));
+
+    addWorkSheet = new QAction(QIcon(":/resource/images/icons/new_worksheet.svg"), "", mainWidget);
+    addWorkSheet->setToolTip(tr("New WorkSheet"));
+
+    expandAll = new QAction(QIcon(":/resource/images/icons/expand_all.svg"), "", mainWidget);
+    expandAll->setToolTip(tr("Expand All"));
+
+    collapseAll = new QAction(QIcon(":/resource/images/icons/collapse_all.svg"), "", mainWidget);
+    collapseAll->setToolTip(tr("Collapse All"));
 
     addExperiment->setData(QVariant::fromValue(NodeType::Experiment));
     addSpecimen->setData(QVariant::fromValue(NodeType::Specimen));

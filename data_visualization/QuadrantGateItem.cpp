@@ -60,14 +60,14 @@ void QuadrantGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         QPointF origin = m_parent->mapPointToPlotArea(m_gate.points().at(0));
         m_origin = origin;
 
-        painter->setPen(QPen(Qt::red, 2));
+        painter->setPen(QPen(m_gate.color(), 2));
         painter->drawLine(plotArea.left(), origin.y(), plotArea.right(), origin.y());
         painter->drawLine(origin.x(), plotArea.top(), origin.x(), plotArea.bottom());
         painter->drawEllipse(origin, 3, 3);
     } else {
         QPointF origin = mapToParent(m_origin);
 
-        painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
+        painter->setPen(QPen(m_gate.color(), 2, Qt::DashDotLine));
         painter->drawLine(plotArea.left(), origin.y(), plotArea.right(), origin.y());
         painter->drawLine(origin.x(), plotArea.top(), origin.x(), plotArea.bottom());
         painter->drawEllipse(origin, 3, 3);

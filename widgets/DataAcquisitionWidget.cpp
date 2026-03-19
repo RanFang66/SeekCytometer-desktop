@@ -50,7 +50,8 @@ void DataAcquisitionWidget::initDockWidget()
     lblStopGateEvents = new QLabel("0 evt", this);
     lblElapsedTime = new QLabel("00:00:00");
 
-    progressTube->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    progressTube->setFixedHeight(20);
+    progressTube->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     progressTube->setRange(0, 100);
     progressTube->setValue(10);
     activityLayout->addWidget(new QLabel(tr("Active Tube"), this), 0, 0);
@@ -125,11 +126,17 @@ void DataAcquisitionWidget::initDockWidget()
     statusLayout->addWidget(lblThresholdCount, 0, 3);
     groupStatus->setLayout(statusLayout);
 
+    groupActivity->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    groupBasicControls->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    groupSetup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    groupStatus->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
     QVBoxLayout *mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->addWidget(groupActivity);
     mainLayout->addWidget(groupBasicControls);
     mainLayout->addWidget(groupSetup);
     mainLayout->addWidget(groupStatus);
+    mainLayout->addStretch();
     mainWidget->setLayout(mainLayout);
 
     setWidget(mainWidget);

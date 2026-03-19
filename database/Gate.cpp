@@ -13,12 +13,13 @@ Gate::Gate()
     m_xMeasurementType = MeasurementType::Unknown;
     m_yMeasurementType = MeasurementType::Unknown;
     m_points = QList<QPoint>();
+    m_color = QColor(0x1f, 0x77, 0xb4); // default blue
 }
 
 Gate::Gate(int worksheetId, QString name, GateType type, int xAxisSettingId, MeasurementType xMeasurementType, int yAxisSettingId, MeasurementType yMeasurementType, const QList<QPoint> &points,  int parentId)
     : m_id(0), m_worksheetId(worksheetId), m_name(name), m_type(type), m_points(points),
     m_xAxisSettingId(xAxisSettingId), m_yAxisSettingId(yAxisSettingId), m_xMeasurementType(xMeasurementType),
-    m_yMeasurementType(yMeasurementType), m_parentId(parentId)
+    m_yMeasurementType(yMeasurementType), m_parentId(parentId), m_color(QColor(0x1f, 0x77, 0xb4))
 {
     m_xAxisSetting = DetectorSettingsDAO().fetchDetectorSettings(xAxisSettingId);
     m_yAxisSetting = DetectorSettingsDAO().fetchDetectorSettings(yAxisSettingId);

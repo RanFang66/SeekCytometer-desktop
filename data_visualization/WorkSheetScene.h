@@ -34,6 +34,7 @@ public:
     void resetPlots();
     QList<PlotBase*> plots() const { return m_plots; }
     QList<GateItem*> gates() const {return m_gateItems;}
+    void removeGateItem(int gateId);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;

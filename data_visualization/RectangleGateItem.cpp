@@ -72,7 +72,7 @@ void RectangleGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         // Clamp to plot area
         rect = rect.intersected(plotArea);
 
-        painter->setPen(QPen(Qt::red, 2));
+        painter->setPen(QPen(m_gate.color(), 2));
         painter->drawRect(rect);
         painter->drawText(rect, Qt::AlignLeft | Qt::AlignTop, m_gate.name());
     } else {
@@ -82,7 +82,7 @@ void RectangleGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem 
         // Clamp to plot area
         rect = rect.intersected(plotArea);
 
-        painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
+        painter->setPen(QPen(m_gate.color(), 2, Qt::DashDotLine));
         painter->drawRect(rect);
         painter->drawText(rect, Qt::AlignLeft | Qt::AlignTop, m_gate.name());
     }

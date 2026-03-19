@@ -10,8 +10,8 @@ GatesDAO::GatesDAO(QObject *parent)
 int GatesDAO::insertGate(const Gate &gate)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO Gates (worksheet_id, gate_name, gate_type, parent_population_id, x_axis_id, y_axis_id, x_mearsure_type, y_mearsure_type, gate_data) "
-                  "VALUES (:worksheet_id, :gate_name, :gate_type, :parent_population_id, :x_axis_id, :y_axis_id, :x_mearsure_type, :y_mearsure_type, :gate_data) "
+    query.prepare("INSERT INTO Gates (worksheet_id, gate_name, gate_type, parent_population_id, x_axis_id, y_axis_id, x_mearsure_type, y_mearsure_type, gate_data, gate_color) "
+                  "VALUES (:worksheet_id, :gate_name, :gate_type, :parent_population_id, :x_axis_id, :y_axis_id, :x_mearsure_type, :y_mearsure_type, :gate_data, :gate_color) "
                   "RETURNING gate_id");
     query.bindValue(":worksheet_id", gate.worksheetId());
     query.bindValue(":gate_name", gate.name());
@@ -22,6 +22,7 @@ int GatesDAO::insertGate(const Gate &gate)
     query.bindValue(":x_mearsure_type", MeasurementTypeHelper::measurementTypeToString(gate.xMeasurementType()));
     query.bindValue(":y_mearsure_type", gate.yMeasurementType() == MeasurementType::Unknown ? QVariant() : MeasurementTypeHelper::measurementTypeToString(gate.yMeasurementType()));
     query.bindValue(":gate_data", gate.pointsJsonString());
+    query.bindValue(":gate_color", gate.color().name());
     if (query.exec() && query.next()) {
         return query.value(0).toInt();
     } else {
@@ -34,7 +35,7 @@ bool GatesDAO::updateGate(const Gate &gate)
 {
     QSqlQuery query;
     query.prepare("UPDATE Gates SET gate_name = :gate_name, gate_type = :gate_type, parent_population_id = :parent_population_id, "
-                  "x_axis_id = :x_axis_id, y_axis_id = :y_axis_id, x_mearsure_type = :x_mearsure_type, y_mearsure_type = :y_mearsure_type, gate_data = :gate_data "
+                  "x_axis_id = :x_axis_id, y_axis_id = :y_axis_id, x_mearsure_type = :x_mearsure_type, y_mearsure_type = :y_mearsure_type, gate_data = :gate_data, gate_color = :gate_color "
                   "WHERE gate_id = :gate_id");
     query.bindValue(":gate_name", gate.name());
     query.bindValue(":gate_type", Gate::gateTypeToString(gate.gateType()));
@@ -44,6 +45,7 @@ bool GatesDAO::updateGate(const Gate &gate)
     query.bindValue(":x_mearsure_type", MeasurementTypeHelper::measurementTypeToString(gate.xMeasurementType()));
     query.bindValue(":y_mearsure_type", gate.yMeasurementType() == MeasurementType::Unknown ? QVariant() : MeasurementTypeHelper::measurementTypeToString(gate.yMeasurementType()));
     query.bindValue(":gate_data", gate.pointsJsonString());
+    query.bindValue(":gate_color", gate.color().name());
     query.bindValue(":gate_id", gate.id());
     if (!query.exec()) {
         handleError(__FUNCTION__, query);
@@ -86,6 +88,8 @@ QList<Gate> GatesDAO::fetchGates(int worksheetId) const
         gate.setXMeasurementType(MeasurementTypeHelper::stringToMeasurementType(query.value("x_mearsure_type").toString()));
         gate.setYMeasurementType(MeasurementTypeHelper::stringToMeasurementType(query.value("y_mearsure_type").toString()));
         gate.setPoinst(QJsonDocument::fromJson(query.value("gate_data").toByteArray()).array());
+        QString colorStr = query.value("gate_color").toString();
+        if (!colorStr.isEmpty()) gate.setColor(QColor(colorStr));
         gates.append(gate);
     }
     return gates;
@@ -114,6 +118,8 @@ QList<Gate> GatesDAO::fetchGates(int worksheetId, int parentId) const
         gate.setXMeasurementType(MeasurementTypeHelper::stringToMeasurementType(query.value("x_mearsure_type").toString()));
         gate.setYMeasurementType(MeasurementTypeHelper::stringToMeasurementType(query.value("y_mearsure_type").toString()));
         gate.setPoinst(QJsonDocument::fromJson(query.value("gate_data").toByteArray()).array());
+        QString colorStr2 = query.value("gate_color").toString();
+        if (!colorStr2.isEmpty()) gate.setColor(QColor(colorStr2));
         gates.append(gate);
     }
     return gates;
@@ -145,6 +151,8 @@ QList<Gate> GatesDAO::fetchGates(int worksheetId, int xAxisId, MeasurementType x
         gate.setXMeasurementType(MeasurementTypeHelper::stringToMeasurementType(query.value("x_mearsure_type").toString()));
         gate.setYMeasurementType(MeasurementTypeHelper::stringToMeasurementType(query.value("y_mearsure_type").toString()));
         gate.setPoinst(QJsonDocument::fromJson(query.value("gate_data").toByteArray()).array());
+        QString colorStr3 = query.value("gate_color").toString();
+        if (!colorStr3.isEmpty()) gate.setColor(QColor(colorStr3));
         gates.append(gate);
     }
     return gates;
@@ -171,6 +179,8 @@ Gate GatesDAO::fetchGate(int gateId) const
         gate.setXMeasurementType(MeasurementTypeHelper::stringToMeasurementType(query.value("x_mearsure_type").toString()));
         gate.setYMeasurementType(MeasurementTypeHelper::stringToMeasurementType(query.value("y_mearsure_type").toString()));
         gate.setPoinst(QJsonDocument::fromJson(query.value("gate_data").toByteArray()).array());
+        QString colorStr4 = query.value("gate_color").toString();
+        if (!colorStr4.isEmpty()) gate.setColor(QColor(colorStr4));
     }
     return gate;
 }

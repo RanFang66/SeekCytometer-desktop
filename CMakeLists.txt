@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_PREFIX_PATH "D:/Qt/6.8.0/llvm-mingw_64")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Sql)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql Network Charts StateMachine)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Sql Network Charts StateMachine Svg)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 # find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 # find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
@@ -128,6 +128,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         data_manage/EventDataManager.h data_manage/EventDataManager.cpp
         data_manage/EventData.h data_manage/EventData.cpp
         datamodel/GatesModel.h datamodel/GatesModel.cpp
+        datamodel/GateStatistics.h
         delegate/TubeButtonDelegate.h delegate/TubeButtonDelegate.cpp
         widgets/BrowserView.h widgets/BrowserView.cpp
         datamodel/TubeSelectModel.h datamodel/TubeSelectModel.cpp
@@ -171,7 +172,7 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::StateMachine)
+target_link_libraries(SeekCytometer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::StateMachine Qt${QT_VERSION_MAJOR}::Svg)
 # target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
 # target_link_libraries(SeekCytometer PRIVATE Qt6::Core)
 # target_link_libraries(SeekCytometer PRIVATE Qt6::Core)

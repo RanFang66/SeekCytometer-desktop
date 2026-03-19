@@ -64,7 +64,7 @@ void IntervalGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         left = qMax(left, plotArea.left());
         right = qMin(right, plotArea.right());
 
-        painter->setPen(QPen(Qt::red, 2));
+        painter->setPen(QPen(m_gate.color(), 2));
         painter->drawLine(QPointF(left, top), QPointF(left, bottom));
         painter->drawLine(QPointF(right, top), QPointF(right, bottom));
         painter->drawLine(QPointF(left, midY), QPointF(right, midY));
@@ -79,7 +79,7 @@ void IntervalGateItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         left = qMax(left, plotArea.left());
         right = qMin(right, plotArea.right());
 
-        painter->setPen(QPen(Qt::blue, 2, Qt::DashDotLine));
+        painter->setPen(QPen(m_gate.color(), 2, Qt::DashDotLine));
         painter->drawLine(QPointF(left, top), QPointF(left, bottom));
         painter->drawLine(QPointF(right, top), QPointF(right, bottom));
         painter->drawLine(QPointF(left, midY), QPointF(right, midY));

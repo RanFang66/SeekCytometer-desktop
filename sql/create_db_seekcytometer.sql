@@ -189,6 +189,7 @@ CREATE TABLE Gates (
     x_mearsure_type             MeasureType NOT NULL DEFAULT 'Height',
     y_mearsure_type             MeasureType,
     gate_data                   JSONB NOT NULL,
+    gate_color                  VARCHAR(16) DEFAULT '#1F77B4',
     FOREIGN KEY (worksheet_id) REFERENCES WorkSheets(worksheet_id) ON DELETE CASCADE,
     FOREIGN KEY (x_axis_id) REFERENCES DetectorSettings(detector_setting_id) ON DELETE CASCADE,
     FOREIGN KEY (y_axis_id) REFERENCES DetectorSettings(detector_setting_id) ON DELETE CASCADE,

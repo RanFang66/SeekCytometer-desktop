@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include <QMessageBox>
+#include <QTimer>
 
 #include "ExperimentsBrowser.h"
 #include "CytometerSettingsWidget.h"
@@ -52,6 +53,15 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() {}
 
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    if (m_firstShow) {
+        m_firstShow = false;
+        // 延迟到事件循环，确保窗口已完成布局并拥有最终尺寸
+        QTimer::singleShot(0, this, &MainWindow::applyDefaultDockSizes);
+    }
+}
 
 void MainWindow::initStatusBar()
 {
@@ -100,52 +110,28 @@ void MainWindow::initDockWidgets()
         "}"
         );
 
-    ExperimentsBrowser *experimentsBrowser = ExperimentsBrowser::instance();
-    addDockWidget(Qt::LeftDockWidgetArea, experimentsBrowser);
+    // 创建并保存所有 dock widget 引用
+    m_browserDock = ExperimentsBrowser::instance();
+    m_cytometerDock = new CytometerSettingsWidget("Cytometer", this);
+    m_worksheetDock = WorkSheetWidget::instance();
+    m_waveformDock = WaveformWidget::instance();
+    m_acquisitionDock = new DataAcquisitionWidget("Acquisition Control", this);
+    m_sortingDock = SortingWidget::instance();
+    m_cameraDock = new CameraWidget("Camera Control", this);
 
-
-    CytometerSettingsWidget *cytometerSettingsWidget = new CytometerSettingsWidget("Cytometer", this);
-    splitDockWidget(experimentsBrowser, cytometerSettingsWidget, Qt::Horizontal);
-
-    // WorkSheetWidget *workSheetWidget = new WorkSheetWidget("WorkSheet", this);
-    splitDockWidget(cytometerSettingsWidget, WorkSheetWidget::instance(), Qt::Horizontal);
-    tabifyDockWidget(WorkSheetWidget::instance(), WaveformWidget::instance());
-    WorkSheetWidget::instance()->raise();
-
-    DataAcquisitionWidget *acquisitionWidget = new DataAcquisitionWidget("Acquisition Control", this);
-    splitDockWidget(cytometerSettingsWidget, acquisitionWidget, Qt::Vertical);
-
-    tabifyDockWidget(acquisitionWidget, SortingWidget::instance());
-
-    // 添加相机控制widget
-    CameraWidget *cameraWidget = new CameraWidget("Camera Control", this);
-    tabifyDockWidget(SortingWidget::instance(), cameraWidget);
-
-    // SampleChipWidget *sampleChipWidget = new SampleChipWidget("Chip Control", this);
-    // tabifyDockWidget(SortingWidget::instance(), sampleChipWidget);
-
-    // OpticsControlWidget *opticsControlWidget = new OpticsControlWidget("Optics Control", this);
-    // tabifyDockWidget(sampleChipWidget, opticsControlWidget);
-
-    // MicroFluidicWidget *microFluidicWidget = new MicroFluidicWidget("MicroFluidic Control", this);
-    // tabifyDockWidget(opticsControlWidget, microFluidicWidget);
-
-    SortingWidget::instance()->raise();
-
-    connect(experimentsBrowser, &ExperimentsBrowser::worksheetSelected, WorkSheetWidget::instance(), &WorkSheetWidget::addWorkSheetView);
-    connect(experimentsBrowser, &ExperimentsBrowser::settingsSelected, cytometerSettingsWidget, &CytometerSettingsWidget::onCytometerSettingsChanged);
+    connect(ExperimentsBrowser::instance(), &ExperimentsBrowser::worksheetSelected, WorkSheetWidget::instance(), &WorkSheetWidget::addWorkSheetView);
+    connect(ExperimentsBrowser::instance(), &ExperimentsBrowser::settingsSelected,
+            qobject_cast<CytometerSettingsWidget*>(m_cytometerDock), &CytometerSettingsWidget::onCytometerSettingsChanged);
 
     // 记录 tabified 分组，用于隐藏后恢复位置
-    tabGroups.append({WorkSheetWidget::instance(), WaveformWidget::instance()});
-    tabGroups.append({acquisitionWidget, SortingWidget::instance(), cameraWidget});
+    tabGroups.append(QList<QDockWidget*>{m_worksheetDock, m_waveformDock});
+    tabGroups.append(QList<QDockWidget*>{m_acquisitionDock, m_sortingDock, m_cameraDock});
 
     // Connect View menu actions to toggle dock widget visibility
     auto bindDockToggle = [this](QAction *action, QDockWidget *dock) {
-        // Use triggered (not toggled) so programmatic setChecked won't cause feedback loop
         QObject::connect(action, &QAction::triggered, this, [this, dock](bool checked) {
             toggleDockWidget(dock, checked);
         });
-        // Sync action state, but skip uncheck when dock is just on a background tab
         QObject::connect(dock, &QDockWidget::visibilityChanged, this, [this, action, dock](bool visible) {
             QSignalBlocker blocker(action);
             if (!visible) {
@@ -164,20 +150,79 @@ void MainWindow::initDockWidgets()
         });
     };
 
-    bindDockToggle(menuBarManager->getShowBrowserAction(), experimentsBrowser);
-    bindDockToggle(menuBarManager->getShowCytometerAction(), cytometerSettingsWidget);
-    bindDockToggle(menuBarManager->getShowWorkSheetAction(), WorkSheetWidget::instance());
-    bindDockToggle(menuBarManager->getShowAcquisitionAction(), acquisitionWidget);
-    bindDockToggle(menuBarManager->getShowSortingAction(), SortingWidget::instance());
-    bindDockToggle(menuBarManager->getShowCameraAction(), cameraWidget);
-    bindDockToggle(menuBarManager->getShowWaveformAction(), WaveformWidget::instance());
+    bindDockToggle(menuBarManager->getShowBrowserAction(), m_browserDock);
+    bindDockToggle(menuBarManager->getShowCytometerAction(), m_cytometerDock);
+    bindDockToggle(menuBarManager->getShowWorkSheetAction(), m_worksheetDock);
+    bindDockToggle(menuBarManager->getShowAcquisitionAction(), m_acquisitionDock);
+    bindDockToggle(menuBarManager->getShowSortingAction(), m_sortingDock);
+    bindDockToggle(menuBarManager->getShowCameraAction(), m_cameraDock);
+    bindDockToggle(menuBarManager->getShowWaveformAction(), m_waveformDock);
 
-    QList<QDockWidget*> horizontalDocks = {
-        experimentsBrowser,
-        cytometerSettingsWidget,
-        WorkSheetWidget::instance()
-    };
-    QList<int> sizes = {1, 3, 3};  // 比例值（实际像素会根据窗口大小计算）
+    // Reset Layout 按钮连接
+    connect(menuBarManager->getResetLayoutAction(), &QAction::triggered, this, &MainWindow::resetToDefaultLayout);
+
+    applyDefaultLayout();
+}
+
+void MainWindow::applyDefaultLayout()
+{
+    // 第一列：Browser
+    addDockWidget(Qt::LeftDockWidgetArea, m_browserDock);
+
+    // 第二列：Cytometer（上）+ Acquisition/Sorting/Camera（下，tabified）
+    splitDockWidget(m_browserDock, m_cytometerDock, Qt::Horizontal);
+
+
+    // 第三列：WorkSheet / Waveform（tabified）
+    splitDockWidget(m_cytometerDock, m_worksheetDock, Qt::Horizontal);
+
+
+    splitDockWidget(m_cytometerDock, m_acquisitionDock, Qt::Vertical);
+    tabifyDockWidget(m_acquisitionDock, m_sortingDock);
+    tabifyDockWidget(m_sortingDock, m_cameraDock);
+    m_sortingDock->raise();
+
+
+    tabifyDockWidget(m_worksheetDock, m_waveformDock);
+    m_worksheetDock->raise();
+
+
+}
+
+void MainWindow::resetToDefaultLayout()
+{
+    // 显示所有 dock widget
+    QList<QDockWidget*> allDocks = {m_browserDock, m_cytometerDock, m_worksheetDock,
+                                     m_waveformDock, m_acquisitionDock, m_sortingDock, m_cameraDock};
+    for (QDockWidget *dock : allDocks) {
+        dock->setVisible(true);
+        dock->setFloating(false);
+    }
+
+    // 同步 View 菜单的 action 状态
+    menuBarManager->getShowBrowserAction()->setChecked(true);
+    menuBarManager->getShowCytometerAction()->setChecked(true);
+    menuBarManager->getShowWorkSheetAction()->setChecked(true);
+    menuBarManager->getShowAcquisitionAction()->setChecked(true);
+    menuBarManager->getShowSortingAction()->setChecked(true);
+    menuBarManager->getShowCameraAction()->setChecked(true);
+    menuBarManager->getShowWaveformAction()->setChecked(true);
+
+    // 重新应用默认布局
+    applyDefaultLayout();
+
+    // 强制恢复最大化，防止 dock 重排后窗口尺寸超出屏幕
+    setWindowState(Qt::WindowMaximized);
+
+    // 延迟应用比例，等窗口几何更新完成
+    QTimer::singleShot(0, this, &MainWindow::applyDefaultDockSizes);
+}
+
+void MainWindow::applyDefaultDockSizes()
+{
+    // 三列宽度比 1:2:3
+    QList<QDockWidget*> horizontalDocks = {m_browserDock, m_cytometerDock, m_worksheetDock};
+    QList<int> sizes = {1, 2, 3};
     resizeDocks(horizontalDocks, sizes, Qt::Horizontal);
 }
 
